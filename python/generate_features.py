@@ -50,17 +50,16 @@ def store_data(ids, data_dir, newdata, train=True, labels=('')):
             index=index+1
         testfile.to_csv('extratestfeatures.csv', index_label='id', index=False)
 
-
 def main():
     print(" - Start.")
     data_dir='..\\data\\'
     train = pd.read_csv(data_dir + 'trainset.csv')
     trainlabels = pd.read_csv(data_dir + 'trainlabels.csv')
     test = pd.read_csv(data_dir + 'testset.csv')
-    newtrain = date_features(train)
-    newtest = date_features(test)
-    store_data(train['id'],data_dir, newtrain, train=True,labels=('year_recorded','month_recorded','day_recorded','age_of_pump','date_recorded_distance_days_20140101'))
-    store_data(test['id'],data_dir, newtest, train=False,labels=('year_recorded','month_recorded','day_recorded','age_of_pump','date_recorded_distance_days_20140101'))
+    #newtrain = date_features(train)
+    #newtest = date_features(test)
+    #store_data(train['id'],data_dir, newtrain, train=True,labels=('year_recorded','month_recorded','day_recorded','age_of_pump','date_recorded_distance_days_20140101'))
+    #store_data(test['id'],data_dir, newtest, train=False,labels=('year_recorded','month_recorded','day_recorded','age_of_pump','date_recorded_distance_days_20140101'))
     print(" - Finished.")
 
 if __name__ == '__main__':

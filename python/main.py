@@ -18,6 +18,8 @@ def load_data(train_size=0.8, testdata=False):
     train = pd.read_csv(data_dir + 'trainset.csv')
     trainlabels = pd.read_csv(data_dir + 'trainlabels.csv')
     test = pd.read_csv(data_dir + 'testset.csv')
+    extratrain=pd.read_csv('extratrainfeatures.csv')
+    extratest=pd.read_csv('extratestfeatures.csv')
     vec = DictVectorizer()
 
     #names_cat = []
@@ -31,13 +33,16 @@ def load_data(train_size=0.8, testdata=False):
     #                     'payment_type','water_quality','quality_group','quantity','quantity_group','source','source_type','source_class',
     #                     'waterpoint_type','waterpoint_type_group'
     numerical_label = ['amount_tsh','gps_height','longitude','latitude','num_private','region_code','district_code','population','construction_year']
+    extra_label=['year_recorded','month_recorded','day_recorded','age_of_pump','date_recorded_distance_days_20140101']
     X_train_cat=vec.fit_transform(train[names_categorical].T.to_dict().values()).todense()
     X_test_cat = vec.transform(test[names_categorical].T.to_dict().values()).todense()
     X_train_num=train[numerical_label]
     X_test_num=test[numerical_label]
+    X_extratrain_num=extratrain[extra_label]
+    X_extratest_num=extratest[extra_label]
 
-    Xtrain=np.hstack((X_train_cat, X_train_num))
-    Xtest=np.hstack((X_test_cat,X_test_num))
+    Xtrain=np.hstack((X_train_cat, X_train_num, X_extratrain_num))
+    Xtest=np.hstack((X_test_cat,X_test_num, X_extratest_num))
     trainset = np.column_stack((Xtrain,trainlabels['status_group']))
     print trainset.shape
     X_train, X_valid, Y_train, Y_valid = train_test_split(
@@ -55,7 +60,7 @@ def trainrf():
     X_train, X_valid, y_train, y_valid = load_data(train_size=0.8, testdata=False)
 
     # Number of trees, increase this to beat the benchmark ;)
-    n_estimators = 100
+    n_estimators = 300
     clf = RandomForestClassifier(n_jobs=3, n_estimators=n_estimators, max_depth=23)
     print(" -- Start training.")
     clf.fit(X_train, y_train)
@@ -73,7 +78,6 @@ def trainrf():
 
 
     return clf, encoder, transformer
-
 
 def make_submission(clf, encoder, transformer, path='my_submission.csv'):
     path = sys.argv[3] if len(sys.argv) > 3 else path
@@ -93,7 +97,7 @@ def make_submission(clf, encoder, transformer, path='my_submission.csv'):
 def main():
     print(" - Start.")
     model, encoder, transformer = trainrf()
-    #make_submission(model, encoder, transformer)
+    make_submission(model, encoder, transformer)
     print(" - Finished.")
 if __name__ == '__main__':
     start_time = time.time()

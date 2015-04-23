@@ -2,3 +2,8 @@ This repository will contain the code that solves the Pump It Up competition on 
 
 It was authored by the Filter Feeders group. Members:
 Harmen Prins
+Bas van Berkel
+Hans-Christiaan Braun
+Erik Eppenhof
+Thomas van Heyningen
+Senna van Iersel

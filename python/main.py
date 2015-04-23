@@ -5,12 +5,10 @@ import time
 
 import numpy as np
 import pandas as pd
-import scipy
+
 from sklearn.cross_validation import train_test_split
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.feature_extraction.text import TfidfTransformer
-from sklearn.cross_validation import KFold
 from sklearn.metrics import classification_report, accuracy_score
 from sklearn.preprocessing import LabelEncoder
 from sklearn.feature_extraction import DictVectorizer
@@ -54,10 +52,10 @@ def load_data(train_size=0.8, testdata=False):
 
 def trainrf():
     transformer = TfidfTransformer(norm='l2', smooth_idf=True, sublinear_tf=False, use_idf=True)
-    X_train, X_valid, y_train, y_valid = load_data(train_size=0.999, testdata=False)
+    X_train, X_valid, y_train, y_valid = load_data(train_size=0.8, testdata=False)
 
     # Number of trees, increase this to beat the benchmark ;)
-    n_estimators = 300
+    n_estimators = 100
     clf = RandomForestClassifier(n_jobs=3, n_estimators=n_estimators, max_depth=23)
     print(" -- Start training.")
     clf.fit(X_train, y_train)
@@ -95,9 +93,8 @@ def make_submission(clf, encoder, transformer, path='my_submission.csv'):
 def main():
     print(" - Start.")
     model, encoder, transformer = trainrf()
-    make_submission(model, encoder, transformer)
+    #make_submission(model, encoder, transformer)
     print(" - Finished.")
-
 if __name__ == '__main__':
     start_time = time.time()
     main()

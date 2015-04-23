@@ -71,17 +71,16 @@ def trainrf():
     y_pred = clf.predict(X_valid)
     print classification_report(y_valid, y_pred)
     print accuracy_score(y_valid, y_pred)
-
+    '''
     #code to print predictions, pretty useless without original labels
     predictdata=np.column_stack((X_valid, y_pred))
     print predictdata.shape
     print y_prob.shape
     predictdata=np.hstack((predictdata, y_prob))
-    predictdata=np.hstack((predictdata, y_prob2))
     predictdata=np.column_stack((predictdata, y_valid))
     filedata=pd.DataFrame(data=predictdata)
     filedata.to_csv('predictions.csv', index=False)
-
+    '''
     encoder = LabelEncoder()
     y_true = encoder.fit_transform(y_valid)
     assert (encoder.classes_ == clf.classes_).all()

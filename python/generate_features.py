@@ -5,6 +5,28 @@ import numpy as np
 import pandas as pd
 import datetime as dt
 
+from sklearn.preprocessing import LabelEncoder
+
+def encode_categorical(data_dir,traindata,testdata):
+    names_parameters=['funder','installer','wpt_name','basin','subvillage','region','lga','ward','public_meeting','recorded_by'
+        ,'scheme_management','scheme_name','permit','extraction_type','extraction_type_group','extraction_type_class','management','management_group','payment',
+                         'payment_type','water_quality','quality_group','quantity','quantity_group','source','source_type','source_class',
+                        'waterpoint_type','waterpoint_type_group']
+    (testrows, testcolumns)=testdata.shape
+    (trainrows, traincolumns)=traindata.shape
+    for feature in names_parameters:
+        le = LabelEncoder()
+        fitdata=np.append(traindata[feature].values,testdata[feature].values)
+        le.fit(fitdata)
+        train_cat=le.transform(traindata[feature])
+        test_cat = le.transform(testdata[feature])
+        newtestdata=np.zeros((testrows,1), dtype=int)
+        newtestdata[:, 0]=np.array(test_cat)
+        store_data(newtestdata, train=False,labels=(feature +'_num'), one=True)
+        newtraindata=np.zeros((trainrows,1), dtype=int)
+        newtraindata[:, 0]=np.array(train_cat)
+        store_data(newtraindata, train=True,labels=(feature +'_num'), one=True)
+
 def date_features(data):
     (rows, columns)=data.shape
     years = []
@@ -30,24 +52,30 @@ def date_features(data):
     newdata[:, 4]=np.array(distance)
     return(newdata)
 
-def store_data(ids, data_dir, newdata, train=True, labels=('')):
+def store_data(newdata, ids=None, data_dir=None, train=True, labels=(''), one=False):
     if train:
         trainfile = pd.read_csv('extratrainfeatures.csv')
         #trainfile=pd.DataFrame(data=ids)  # only needed to generate the file the first time
         trainfile.set_index('id')
         index=0
-        for label in labels:
-            trainfile[label]=newdata[:,index]
-            index=index+1
+        if one:
+            trainfile[labels]=newdata[:,0]
+        else:
+            for label in labels:
+                trainfile[label]=newdata[:,index]
+                index=index+1
         trainfile.to_csv('extratrainfeatures.csv', index_label='id', index=False)
     else:
         testfile = pd.read_csv('extratestfeatures.csv')
         #testfile=pd.DataFrame(data=ids) # only needed to generate the file the first time
         testfile.set_index('id')
         index=0
-        for label in labels:
-            testfile[label]=newdata[:,index]
-            index=index+1
+        if one:
+            testfile[labels]=newdata[:,0]
+        else:
+            for label in labels:
+                testfile[label]=newdata[:,index]
+                index=index+1
         testfile.to_csv('extratestfeatures.csv', index_label='id', index=False)
 
 def main():
@@ -56,10 +84,17 @@ def main():
     train = pd.read_csv(data_dir + 'trainset.csv')
     trainlabels = pd.read_csv(data_dir + 'trainlabels.csv')
     test = pd.read_csv(data_dir + 'testset.csv')
+
+    #to make the categorical features numeric:
+    #encode_categorical(data_dir,train,test)
+
+
+    #to create the datelabels
     #newtrain = date_features(train)
     #newtest = date_features(test)
-    #store_data(train['id'],data_dir, newtrain, train=True,labels=('year_recorded','month_recorded','day_recorded','age_of_pump','date_recorded_distance_days_20140101'))
-    #store_data(test['id'],data_dir, newtest, train=False,labels=('year_recorded','month_recorded','day_recorded','age_of_pump','date_recorded_distance_days_20140101'))
+    #store_data(newtrain, train['id'], data_dir, train=True,labels=('year_recorded','month_recorded','day_recorded','age_of_pump','date_recorded_distance_days_20140101'))
+    #store_data(newtest, test['id'], data_dir, newtest, train=False,labels=('year_recorded','month_recorded','day_recorded','age_of_pump','date_recorded_distance_days_20140101'))
+
     print(" - Finished.")
 
 if __name__ == '__main__':

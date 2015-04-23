@@ -27,22 +27,22 @@ def load_data(train_size=0.8, testdata=False):
     #    names_cat.append(name)
     #    print name, len(np.unique(train[name]))
 
-    names_categorical = ['source', 'quantity', 'waterpoint_type', 'water_quality', 'payment', 'management', 'extraction_type'] #'permit', 'public_meeting', 'basin'
-    #'funder','installer','wpt_name','basin','subvillage','region','lga','ward','public_meeting','recorded_by'
-    #    ,'scheme_management','scheme_name','permit','extraction_type','extraction_type_group','extraction_type_class','management','management_group','payment',
-    #                     'payment_type','water_quality','quality_group','quantity','quantity_group','source','source_type','source_class',
-    #                     'waterpoint_type','waterpoint_type_group'
-    numerical_label = ['amount_tsh','gps_height','longitude','latitude','num_private','region_code','district_code','population','construction_year']
-    extra_label=['year_recorded','month_recorded','day_recorded','age_of_pump','date_recorded_distance_days_20140101']
-    X_train_cat=vec.fit_transform(train[names_categorical].T.to_dict().values()).todense()
-    X_test_cat = vec.transform(test[names_categorical].T.to_dict().values()).todense()
+    numerical_label = ['amount_tsh','gps_height','longitude','latitude','region_code','district_code','population','construction_year']
+    #removed labels: num_private
+    extra_label=['funder_num','installer_num','wpt_name_num','basin_num','subvillage_num','region_num','lga_num','ward_num'
+        ,'public_meeting_num','scheme_management_num','scheme_name_num','permit_num','extraction_type_num'
+        ,'extraction_type_group_num','extraction_type_class_num','management_num','management_group_num','payment_num'
+        ,'payment_type_num','water_quality_num','quality_group_num','quantity_num','quantity_group_num','source_num'
+        ,'source_type_num','source_class_num','waterpoint_type_num','waterpoint_type_group_num'
+        ,'month_recorded','age_of_pump','date_recorded_distance_days_20140101']
+    #removed labels: recorded_by_num, day_recorded, year_recorded
     X_train_num=train[numerical_label]
     X_test_num=test[numerical_label]
     X_extratrain_num=extratrain[extra_label]
     X_extratest_num=extratest[extra_label]
 
-    Xtrain=np.hstack((X_train_cat, X_train_num, X_extratrain_num))
-    Xtest=np.hstack((X_test_cat,X_test_num, X_extratest_num))
+    Xtrain=np.hstack((X_train_num, X_extratrain_num))
+    Xtest=np.hstack((X_test_num, X_extratest_num))
     trainset = np.column_stack((Xtrain,trainlabels['status_group']))
     print trainset.shape
     X_train, X_valid, Y_train, Y_valid = train_test_split(
@@ -60,7 +60,7 @@ def trainrf():
     X_train, X_valid, y_train, y_valid = load_data(train_size=0.8, testdata=False)
 
     # Number of trees, increase this to beat the benchmark ;)
-    n_estimators = 300
+    n_estimators = 100
     clf = RandomForestClassifier(n_jobs=3, n_estimators=n_estimators, max_depth=23)
     print(" -- Start training.")
     clf.fit(X_train, y_train)
@@ -72,6 +72,15 @@ def trainrf():
     print classification_report(y_valid, y_pred)
     print accuracy_score(y_valid, y_pred)
 
+    ''' #code to print predictions, pretty useless without original labels
+    predictdata=np.column_stack((X_valid, y_pred))
+    print predictdata.shape
+    print y_prob.shape
+    predictdata=np.hstack((predictdata, y_prob))
+    predictdata=np.column_stack((predictdata, y_valid))
+    filedata=pd.DataFrame(data=predictdata)
+    filedata.to_csv('predictions.csv', index=False)
+    '''
     encoder = LabelEncoder()
     y_true = encoder.fit_transform(y_valid)
     assert (encoder.classes_ == clf.classes_).all()
@@ -97,7 +106,7 @@ def make_submission(clf, encoder, transformer, path='my_submission.csv'):
 def main():
     print(" - Start.")
     model, encoder, transformer = trainrf()
-    make_submission(model, encoder, transformer)
+    #make_submission(model, encoder, transformer)
     print(" - Finished.")
 if __name__ == '__main__':
     start_time = time.time()

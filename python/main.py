@@ -11,7 +11,7 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.feature_extraction.text import TfidfTransformer
 from sklearn.cross_validation import KFold
-from sklearn.metrics import classification_report
+from sklearn.metrics import classification_report, accuracy_score
 from sklearn.preprocessing import LabelEncoder
 from sklearn.feature_extraction import DictVectorizer
 
@@ -54,11 +54,11 @@ def load_data(train_size=0.8, testdata=False):
 
 def trainrf():
     transformer = TfidfTransformer(norm='l2', smooth_idf=True, sublinear_tf=False, use_idf=True)
-    X_train, X_valid, y_train, y_valid = load_data(train_size=0.9, testdata=False)
+    X_train, X_valid, y_train, y_valid = load_data(train_size=0.999, testdata=False)
 
     # Number of trees, increase this to beat the benchmark ;)
-    n_estimators = 100
-    clf = RandomForestClassifier(n_jobs=3, n_estimators=n_estimators, max_depth=35)
+    n_estimators = 300
+    clf = RandomForestClassifier(n_jobs=3, n_estimators=n_estimators, max_depth=23)
     print(" -- Start training.")
     clf.fit(X_train, y_train)
     print clf.feature_importances_
@@ -67,13 +67,11 @@ def trainrf():
 
     y_pred = clf.predict(X_valid)
     print classification_report(y_valid, y_pred)
+    print accuracy_score(y_valid, y_pred)
 
     encoder = LabelEncoder()
     y_true = encoder.fit_transform(y_valid)
     assert (encoder.classes_ == clf.classes_).all()
-
-    #predictionstable = np.asarray(np.hstack((X_valid, np.column_stack((y_valid, y_pred)), y_prob)))
-    #np.savetxt("predicted.csv", predictionstable, delimiter=";", fmt="%s")
 
 
     return clf, encoder, transformer

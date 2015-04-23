@@ -32,23 +32,23 @@ def date_features(data):
 
 def store_data(ids, data_dir, newdata, train=True, labels=('')):
     if train:
-        trainfile = pd.read_csv(data_dir + 'extratrainfeatures.csv')
+        trainfile = pd.read_csv('extratrainfeatures.csv')
         #trainfile=pd.DataFrame(data=ids)  # only needed to generate the file the first time
         trainfile.set_index('id')
         index=0
         for label in labels:
             trainfile[label]=newdata[:,index]
             index=index+1
-        trainfile.to_csv(data_dir + 'extratrainfeatures.csv', index_label='id', index=False)
+        trainfile.to_csv('extratrainfeatures.csv', index_label='id', index=False)
     else:
-        testfile = pd.read_csv(data_dir + 'extratestfeatures.csv')
+        testfile = pd.read_csv('extratestfeatures.csv')
         #testfile=pd.DataFrame(data=ids) # only needed to generate the file the first time
         testfile.set_index('id')
         index=0
         for label in labels:
             testfile[label]=newdata[:,index]
             index=index+1
-        testfile.to_csv(data_dir + 'extratestfeatures.csv', index_label='id', index=False)
+        testfile.to_csv('extratestfeatures.csv', index_label='id', index=False)
 
 
 def main():

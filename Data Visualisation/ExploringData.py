@@ -17,6 +17,15 @@ from operator import add
 TRAIN_X_PATH = "../../train/train_x.csv"
 TRAIN_Y_PATH = "../../train/train_y.csv"
 
+CATEGORICALS = ['funder','wpt_name','basin','subvillage','region','lga',
+                  'ward','recorded_by','scheme_management','scheme_name',
+                  'payment_type','payment','quality_group','management_group',
+                  'management','water_quality','quality_group','quantity',
+                  'quantity_group','source','source_type','source_class',
+                  'waterpoint_type','waterpoint_type_group','status_group',
+                  'extraction_type','extraction_type_group','installer',
+                  'extraction_type_class']
+
 def load_data(train_x_path, train_y_path):
     """ Loads the training data in a pandas dataframe.
         The y-values are added to the dataframe as a seperate column
@@ -25,17 +34,10 @@ def load_data(train_x_path, train_y_path):
     # Load the data and merge them into a single dataframe
     train_x = pd.read_csv(train_x_path)
     train_y = pd.read_csv(train_y_path)
-    train = pd.merge(train_x, train_y, on='id')   
-    # Set the categorical variables to pandas special 'category' data type.    
-    train_cats = ['funder','wpt_name','basin','subvillage','region','lga',
-                  'ward','recorded_by','scheme_management','scheme_name',
-                  'payment_type','payment','quality_group','management_group',
-                  'management','water_quality','quality_group','quantity',
-                  'quantity_group','source','source_type','source_class',
-                  'waterpoint_type','waterpoint_type_group','status_group',
-                  'extraction_type','extraction_type_group','extraction_type_class']    
+    train = pd.merge(train_x, train_y, on='id')
     
-    for train_cat in train_cats:
+    # Set the categorical variables to pandas special 'category' data type.   
+    for train_cat in CATEGORICALS:
         train[train_cat] = train[train_cat].astype('category')
     
     print "features found:"
@@ -94,23 +96,50 @@ def plot_bar_stacked(train, column_name, size=(8.0,8.0)):
     
     pl.show()
 
-def compare_cat_columns(train, name_col_1, name_col_2):
-    """ Work In Progress, not working yet!
+def factorize_data(data):
+    """ Factorizes the categorical variables in the pandas data frame 'data':
+        Every ocurring category in a variable is mapped to a positive natural
+        number.        
+        E.g. for 'status_group' the categories become:
+            - functional -> 0
+            - functional_needs_repair -> 1
+            - non_functional -> 2
     """
-    
-    cats = train[name_col_2].cat.categories.union( train[name_col_1].cat.categories )
+    for cat in CATEGORICALS:
+        data[cat] = pd.factorize(data[cat])[0]    
+    return data
 
-    train[name_col_1].cat.set_categories(cats)
-    train[name_col_2].cat.set_categories(cats)
+
+def correlation_matrix(data, size=8.0):
+    """ Calculates and shows the correlation matrix of the pandas data frame
+        'data' as a heat map.
+        Only the correlations between numerical variables are calculated!
+    """
+    # calculate the correlation matrix
+    corr = data.corr()
+    lc = len(corr.columns)
+    # set some settings for plottin'
+    pl.pcolor(corr)
+    pl.colorbar()
+    pl.xlim([-5,lc])
+    pl.ylim([0,lc+5])
+    pl.axis('off')
+    # anotate the rows and columns with their corresponding variables
+    ax = pl.gca()            
+    for i in range(0,lc):
+        ax.annotate(corr.columns[i], (-0.5, i+0.5), \
+            size='large', horizontalalignment='right', verticalalignment='center')
+        ax.annotate(corr.columns[i], (i+0.5, lc+0.5),\
+            size='large', rotation='vertical',\
+            horizontalalignment='center', verticalalignment='right')
+    # change the size of the image
+    fig = pl.figure(num=1)    
+    fig.set_size_inches(size+2, size)     
     
-    print train[name_col_2].cat.categories
-    print train[name_col_1].cat.categories
-    
-    comp = train[name_col_1] == train[name_col_2]
-    return len(comp[comp==True]) / len(train[name_col_1]) 
+    pl.show()
 
 def plot_lat_long(train):
-    """ Plots the 'latitude' and 'longitude' columns of the trainingdata 'train'
+    """ Plots the 'latitude' and 'longitude' columns of the training data 'train'
         as a scatter plot, ultimating in a map of tanzania showing where
         all the pumps are located and if they work or not.
     """

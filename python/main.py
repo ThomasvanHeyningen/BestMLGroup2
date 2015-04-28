@@ -34,7 +34,8 @@ def load_data(train_size=0.8, testdata=False):
         ,'extraction_type_group_num','extraction_type_class_num','management_num','management_group_num','payment_num'
         ,'payment_type_num','water_quality_num','quality_group_num','quantity_num','quantity_group_num','source_num'
         ,'source_type_num','source_class_num','waterpoint_type_num','waterpoint_type_group_num'
-        ,'month_recorded','age_of_pump','date_recorded_distance_days_20140101']
+        ,'month_recorded','age_of_pump','date_recorded_distance_days_20140101','funder_freq','installer_freq'
+        ,'basin_freq','region_freq','lga_freq','ward_freq','scheme_name_freq']
     #removed labels: recorded_by_num, day_recorded, year_recorded, wpt_name_num, subvillage_num
     X_train_num=train[numerical_label]
     X_test_num=test[numerical_label]
@@ -56,7 +57,7 @@ def load_data(train_size=0.8, testdata=False):
 
 
 def trainrf():
-    X_train, X_valid, y_train, y_valid = load_data(train_size=0.999, testdata=False)
+    X_train, X_valid, y_train, y_valid = load_data(train_size=0.8, testdata=False)
 
     # Number of trees, increase this to beat the benchmark ;)
     n_estimators = 1000

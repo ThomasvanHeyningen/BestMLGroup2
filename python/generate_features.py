@@ -7,6 +7,43 @@ import datetime as dt
 
 from sklearn.preprocessing import LabelEncoder
 
+def frequency_feature(data_dir,traindata,testdata):
+    names_parameters=['installer','basin','region','lga','ward','scheme_name']
+    (testrows, testcolumns)=testdata.shape
+    (trainrows, traincolumns)=traindata.shape
+    traindata=traindata.fillna(-1)
+    testdata = testdata.fillna(-1)
+    for feature in names_parameters:
+        countdata=pd.concat([traindata[feature],testdata[feature]], axis=0)
+        unique, counts = np.unique(countdata, return_counts=True)
+        #print len(unique)
+        #for i in range(0,len(unique)):
+        #    print str(unique[i]) + ' <- name  -- count -> ' + str(counts[i])
+        train_frq = []
+        test_frq = []
+        for freq in traindata[feature]:
+            if freq is -1:
+                train_frq.append(-1)
+            elif freq is '0':
+                train_frq.append(-1)
+            else:
+                train_frq.append(counts[np.where(unique==freq)[0][0]])
+        for freq in testdata[feature]:
+            if freq is -1:
+                test_frq.append(-1)
+            elif freq is '0':
+                test_frq.append(-1)
+            else:
+                test_frq.append(counts[np.where(unique==freq)[0][0]])
+
+        newtestdata=np.zeros((testrows,1), dtype=int)
+        newtestdata[:, 0]=np.array(test_frq)
+        store_data(newtestdata, train=False,labels=(feature +'_freq'), one=True)
+        newtraindata=np.zeros((trainrows,1), dtype=int)
+        newtraindata[:, 0]=np.array(train_frq)
+        store_data(newtraindata, train=True,labels=(feature +'_freq'), one=True)
+
+
 def encode_categorical(data_dir,traindata,testdata):
     names_parameters=['funder','installer','wpt_name','basin','subvillage','region','lga','ward','public_meeting','recorded_by'
         ,'scheme_management','scheme_name','permit','extraction_type','extraction_type_group','extraction_type_class','management','management_group','payment',
@@ -94,6 +131,9 @@ def main():
     #newtest = date_features(test)
     #store_data(newtrain, train['id'], data_dir, train=True,labels=('year_recorded','month_recorded','day_recorded','age_of_pump','date_recorded_distance_days_20140101'))
     #store_data(newtest, test['id'], data_dir, newtest, train=False,labels=('year_recorded','month_recorded','day_recorded','age_of_pump','date_recorded_distance_days_20140101'))
+
+    #To make features of frequency counts:
+    frequency_feature(data_dir,train,test)
 
     print(" - Finished.")
 

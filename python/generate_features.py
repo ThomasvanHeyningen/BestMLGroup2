@@ -133,7 +133,7 @@ def main():
     #store_data(newtest, test['id'], data_dir, newtest, train=False,labels=('year_recorded','month_recorded','day_recorded','age_of_pump','date_recorded_distance_days_20140101'))
 
     #To make features of frequency counts:
-    frequency_feature(data_dir,train,test)
+    #frequency_feature(data_dir,train,test)
 
     print(" - Finished.")
 

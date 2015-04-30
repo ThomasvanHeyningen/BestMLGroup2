@@ -117,9 +117,10 @@ def correlation_matrix(data, size=8.0):
     """
     # calculate the correlation matrix
     corr = data.corr()
+    #print corr
     lc = len(corr.columns)
     # set some settings for plottin'
-    pl.pcolor(corr)
+    pl.pcolor(corr, vmin = -1, vmax = 1, edgecolor = "black")
     pl.colorbar()
     pl.xlim([-5,lc])
     pl.ylim([0,lc+5])
@@ -134,7 +135,7 @@ def correlation_matrix(data, size=8.0):
             horizontalalignment='center', verticalalignment='right')
     # change the size of the image
     fig = pl.figure(num=1)    
-    fig.set_size_inches(size+2, size)     
+    fig.set_size_inches(size+(size/4), size)     
     
     pl.show()
 

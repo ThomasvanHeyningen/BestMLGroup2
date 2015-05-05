@@ -92,7 +92,7 @@ def trainrf():
     print('GBM LogLoss {score}'.format(score=log_loss(y_valid, gbm.predict_proba(X_valid))))
     print('GBM accuracy {score}'.format(score=accuracy_score(y_valid, gbm.predict(X_valid))))
     clfs.append(gbm)
-    
+
     clf2 = RandomForestClassifier(n_jobs=3, n_estimators=100, max_depth=23, random_state=8)
     clf2.fit(X_train, y_train)
     print('RFC 1 LogLoss {score}'.format(score=log_loss(y_valid, clf2.predict_proba(X_valid))))
@@ -112,12 +112,16 @@ def trainrf():
     cons = ({'type':'eq','fun':lambda w: 1-sum(w)})
     #our weights are bound between 0 and 1
     bounds = [(0,1)]*len(predictions)
-    print len(predictions)
-    print len(y_valid)
     res = minimize(log_loss_func, starting_values, (predictions, y_valid),  method='SLSQP', bounds=bounds, constraints=cons)
 
     print('Ensamble Score: {best_score}'.format(best_score=res['fun']))
     print('Best Weights: {weights}'.format(weights=res['x']))
+
+    ## This will combine the model probabilities using the optimized weights
+    y_prob = predictions[0]*res['x'][0]
+    for i in range(1, len(predictions)):
+        y_prob += predictions[i]*res['x'][i]
+    print y_prob
 
     #print clf.feature_importances_
     #y_pred = clf.predict(X_valid)

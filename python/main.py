@@ -45,11 +45,11 @@ def load_data(train_size=0.8, testdata=False):
     extra_label=['funder_num','installer_num','basin_num','region_num','lga_num','ward_num'
         ,'public_meeting_num','scheme_management_num','scheme_name_num','permit_num','extraction_type_num'
         ,'extraction_type_group_num','extraction_type_class_num','management_num','management_group_num','payment_num'
-        ,'payment_type_num','water_quality_num','quality_group_num','quantity_num','quantity_group_num','source_num'
-        ,'source_type_num','source_class_num','waterpoint_type_num','waterpoint_type_group_num'
+        ,'payment_type_num','water_quality_num','quantity_num','quantity_group_num','source_num'
+        ,'source_class_num','waterpoint_type_num','waterpoint_type_group_num'
         ,'month_recorded','age_of_pump','date_recorded_distance_days_20140101','funder_freq','installer_freq'
         ,'basin_freq','region_freq','lga_freq','ward_freq','scheme_name_freq', 'year_recorded']
-    #removed labels: recorded_by_num, day_recorded, wpt_name_num, subvillage_num, amount_tsh
+    #removed labels: recorded_by_num, day_recorded, wpt_name_num, subvillage_num, amount_tsh,'quality_group_num','source_type_num'
 
     #Processing the labels into the train and test sets.
     X_train_num=train[numerical_label]
@@ -77,36 +77,37 @@ def trainclf():
     Returns: the classifier and an encoder (I think this one is out of use.
     '''
     #loading the data from load_data:
-    X_train, X_valid, y_train, y_valid = load_data(train_size=0.8, testdata=False)
+    X_train, X_valid, y_train, y_valid = load_data(train_size=0.9999, testdata=False)
 
     # Number of trees, increase this to improve
     clfs = []
     print(" -- Start training.")
 
-    clf = RandomForestClassifier(n_jobs=3, n_estimators=200, max_depth=23, random_state=80)
+    clf = RandomForestClassifier(n_jobs=3, n_estimators=800, max_depth=23, random_state=80)
     clf.fit(X_train, y_train)
     print('RFC 1 LogLoss {score}'.format(score=log_loss(y_valid, clf.predict_proba(X_valid))))
     print('RFC 1 accuracy {score}'.format(score=accuracy_score(y_valid, clf.predict(X_valid))))
     clfs.append(clf)
 
-    # gbm=GradientBoostingClassifier(n_estimators=40, max_depth=13, max_features=20, min_samples_leaf=3,verbose=1, subsample=0.85, random_state=87)
-    # gbm.fit(X_train, y_train)
-    # print('GBM LogLoss {score}'.format(score=log_loss(y_valid, gbm.predict_proba(X_valid))))
-    # print('GBM accuracy {score}'.format(score=accuracy_score(y_valid, gbm.predict(X_valid))))
-    # clfs.append(gbm)
+    gbm=GradientBoostingClassifier(n_estimators=40, max_depth=13, max_features=20, min_samples_leaf=3,verbose=1, subsample=0.85, random_state=87)
+    gbm.fit(X_train, y_train)
+    print('GBM LogLoss {score}'.format(score=log_loss(y_valid, gbm.predict_proba(X_valid))))
+    print('GBM accuracy {score}'.format(score=accuracy_score(y_valid, gbm.predict(X_valid))))
+    clfs.append(gbm)
 
-    # gbm2=GradientBoostingClassifier(n_estimators=40, max_depth=15, max_features=20, min_samples_leaf=5,verbose=1, subsample=0.95, random_state=87)
-    # gbm2.fit(X_train, y_train)
-    # print('GBM 2 LogLoss {score}'.format(score=log_loss(y_valid, gbm2.predict_proba(X_valid))))
-    # print('GBM 2 accuracy {score}'.format(score=accuracy_score(y_valid, gbm2.predict(X_valid))))
-    # clfs.append(gbm2)
+    gbm2=GradientBoostingClassifier(n_estimators=40, max_depth=15, max_features=20, min_samples_leaf=5,verbose=1, subsample=0.95, random_state=86)
+    gbm2.fit(X_train, y_train)
+    print('GBM 2 LogLoss {score}'.format(score=log_loss(y_valid, gbm2.predict_proba(X_valid))))
+    print('GBM 2 accuracy {score}'.format(score=accuracy_score(y_valid, gbm2.predict(X_valid))))
+    clfs.append(gbm2)
 
-    # clf2 = RandomForestClassifier(n_jobs=3, n_estimators=200, max_depth=17, random_state=88)
-    # clf2.fit(X_train, y_train)
-    # print('RFC 2 LogLoss {score}'.format(score=log_loss(y_valid, clf2.predict_proba(X_valid))))
-    # print('RFC 2 accuracy {score}'.format(score=accuracy_score(y_valid, clf2.predict(X_valid))))
-    # clfs.append(clf2)
-    # print(" -- Finished training")
+    clf2 = RandomForestClassifier(n_jobs=3, n_estimators=900, max_depth=17, random_state=88)
+    clf2.fit(X_train, y_train)
+    print('RFC 2 LogLoss {score}'.format(score=log_loss(y_valid, clf2.predict_proba(X_valid))))
+    print('RFC 2 accuracy {score}'.format(score=accuracy_score(y_valid, clf2.predict(X_valid))))
+    clfs.append(clf2)
+
+    print(" -- Finished training")
 
     predictions = []
     for clf in clfs:
@@ -144,7 +145,7 @@ def trainclf():
 
     print ('Ensemble accuracy: {accuracy}'.format(accuracy=accuracy_score(y_valid, y_compare)))
 
-    #print clf.feature_importances_
+    print clf.feature_importances_
     #y_pred = clf.predict(X_valid)
     #print classification_report(y_valid, y_pred)
 
@@ -204,7 +205,7 @@ def main():
     print(" - Start.")
     model, weights = trainclf()
     #weights have to be saved from an 0.8 split to prevent heavy overfitting when run on full data
-    weights= [0.60421802,  0.24823096,  0.14755102] # RF, GBM, RF
+    weights= [0.35, 0.20, 0.25, 0.20] # RF, GBM, GBM2, RF2
     make_submission(model, weights)
     print(" - Finished.")
 

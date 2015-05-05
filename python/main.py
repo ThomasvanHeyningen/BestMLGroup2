@@ -9,7 +9,9 @@ import pandas as pd
 from scipy.optimize import minimize
 from sklearn.cross_validation import train_test_split
 from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
+from sklearn.linear_model import SGDClassifier
 from sklearn.metrics import classification_report, accuracy_score, log_loss
+from sklearn.svm import LinearSVC
 
 def load_data(train_size=0.8, testdata=False):
     '''
@@ -80,6 +82,7 @@ def trainclf():
     # Number of trees, increase this to improve
     clfs = []
     print(" -- Start training.")
+
     clf = RandomForestClassifier(n_jobs=3, n_estimators=200, max_depth=23, random_state=80)
     clf.fit(X_train, y_train)
     print('RFC 1 LogLoss {score}'.format(score=log_loss(y_valid, clf.predict_proba(X_valid))))

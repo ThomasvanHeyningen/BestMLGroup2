@@ -15,6 +15,18 @@ from sklearn.preprocessing import LabelEncoder
 from sklearn.feature_extraction import DictVectorizer
 
 def load_data(train_size=0.8, testdata=False):
+    '''
+    This function loads the data from the relevant data files.
+    After loading the data a selection is made of the data to use (hardcoded).
+
+    train_size: the size of the training set in the train-test split: between 0 and 1.
+    testdata: If true the test set is loaded to generate a submission.
+
+    return:
+    if testdata is true: the relevant features from the test data
+    else: the train and validation set from the train data to learn an algorithm
+    '''
+
     data_dir='..\\data\\'
     train = pd.read_csv(data_dir + 'trainset.csv')
     trainlabels = pd.read_csv(data_dir + 'trainlabels.csv')

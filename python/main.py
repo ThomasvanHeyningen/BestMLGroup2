@@ -68,7 +68,7 @@ def load_data(train_size=0.8, testdata=False):
     else:
         return(X_train, X_valid, Y_train, Y_valid)
 
-def trainrf():
+def trainclf():
     '''
     Code to train a classifier. Gets the data from load_data.
 
@@ -79,7 +79,6 @@ def trainrf():
 
     # Number of trees, increase this to improve
     clfs = []
-
     print(" -- Start training.")
     clf = RandomForestClassifier(n_jobs=3, n_estimators=100, max_depth=23, random_state=5)
     clf.fit(X_train, y_train)
@@ -93,7 +92,7 @@ def trainrf():
     print('GBM accuracy {score}'.format(score=accuracy_score(y_valid, gbm.predict(X_valid))))
     clfs.append(gbm)
 
-    clf2 = RandomForestClassifier(n_jobs=3, n_estimators=100, max_depth=23, random_state=8)
+    clf2 = RandomForestClassifier(n_jobs=3, n_estimators=100, max_depth=17, random_state=8)
     clf2.fit(X_train, y_train)
     print('RFC 1 LogLoss {score}'.format(score=log_loss(y_valid, clf2.predict_proba(X_valid))))
     print('RFC 1 accuracy {score}'.format(score=accuracy_score(y_valid, clf2.predict(X_valid))))
@@ -118,16 +117,29 @@ def trainrf():
     print('Best Weights: {weights}'.format(weights=res['x']))
 
     ## This will combine the model probabilities using the optimized weights
-    y_prob = predictions[0]*res['x'][0]
-    for i in range(1, len(predictions)):
+    y_prob = 0
+    for i in range( len(predictions)):
         y_prob += predictions[i]*res['x'][i]
-    print y_prob
+    y_prob=np.array(y_prob)
+    max_index=np.argmax(y_prob, axis=1)
+    y_compare = []
+    for i in range(len(max_index)):
+        if max_index[i] == 0:
+            y_compare.append('functional')
+        elif max_index[i] == 1:
+            y_compare.append('functional needs repair')
+        elif max_index[i] == 2:
+            y_compare.append('non functional')
+        else:
+            y_compare.append('error')
+    print y_compare
+    print accuracy_score(y_valid, y_compare)
 
     #print clf.feature_importances_
     #y_pred = clf.predict(X_valid)
     #print classification_report(y_valid, y_pred)
 
-    return clf
+    return clfs, res['x']
 
 def log_loss_func(weights, predictions, y_valid):
     ''' scipy minimize will pass the weights as a numpy array '''
@@ -145,15 +157,30 @@ def accuracy_func(weights, predictions, y_valid):
 
     return accuracy_score(y_valid, final_prediction)
 
-def make_submission(clf, path='my_submission.csv'):
+def make_submission(clfs, weights, path='my_submission.csv'):
     '''
     Code to make a submission:
     Gets a classifier and uses this to classify the test-set which is loaded using load_data
     '''
     path = sys.argv[3] if len(sys.argv) > 3 else path
     X_test, ids = load_data(testdata=True)
+    y_prob_tot = 0
+    for i in range(len(clfs)):
+        y_prob = clfs[i].predict_proba(X_test)
+        y_prob_tot += y_prob[i]*weights[i]
+    y_prob_tot=np.array(y_prob_tot)
+    max_index=np.argmax(y_prob_tot, axis=1)
+    y_pred = []
+    for i in range(len(max_index)):
+        if max_index[i] == 0:
+            y_pred.append('functional')
+        elif max_index[i] == 1:
+            y_pred.append('functional needs repair')
+        elif max_index[i] == 2:
+            y_pred.append('non functional')
+        else:
+            y_pred.append('error')
 
-    y_pred = clf.predict(X_test)
     with open(path, 'w') as f:
         f.write('id,status_group\n')
         for id, pred in zip(ids, y_pred):
@@ -165,8 +192,8 @@ def make_submission(clf, path='my_submission.csv'):
 
 def main():
     print(" - Start.")
-    model = trainrf()
-    #make_submission(model)
+    model, weights = trainclf()
+    make_submission(model, weights)
     print(" - Finished.")
 
 if __name__ == '__main__':

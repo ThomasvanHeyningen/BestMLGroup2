@@ -8,6 +8,7 @@ import pandas as pd
 
 from sklearn.cross_validation import train_test_split
 from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
+from sklearn.linear_model import SGDClassifier
 from sklearn.feature_extraction.text import TfidfTransformer
 from sklearn.metrics import classification_report, accuracy_score
 from sklearn.preprocessing import LabelEncoder
@@ -27,7 +28,7 @@ def load_data(train_size=0.8, testdata=False):
     #    names_cat.append(name)
     #   print name, len(np.unique(train[name]))
 
-    numerical_label = ['amount_tsh','gps_height','longitude','latitude','region_code','district_code','population','construction_year']
+    numerical_label = ['gps_height','longitude','latitude','region_code','district_code','population','construction_year']
     #removed labels: num_private
     extra_label=['funder_num','installer_num','basin_num','region_num','lga_num','ward_num'
         ,'public_meeting_num','scheme_management_num','scheme_name_num','permit_num','extraction_type_num'
@@ -35,8 +36,8 @@ def load_data(train_size=0.8, testdata=False):
         ,'payment_type_num','water_quality_num','quality_group_num','quantity_num','quantity_group_num','source_num'
         ,'source_type_num','source_class_num','waterpoint_type_num','waterpoint_type_group_num'
         ,'month_recorded','age_of_pump','date_recorded_distance_days_20140101','funder_freq','installer_freq'
-        ,'basin_freq','region_freq','lga_freq','ward_freq','scheme_name_freq']
-    #removed labels: recorded_by_num, day_recorded, year_recorded, wpt_name_num, subvillage_num
+        ,'basin_freq','region_freq','lga_freq','ward_freq','scheme_name_freq', 'year_recorded']
+    #removed labels: recorded_by_num, day_recorded, wpt_name_num, subvillage_num, amount_tsh
     X_train_num=train[numerical_label]
     X_test_num=test[numerical_label]
     X_extratrain_num=extratrain[extra_label]
@@ -47,7 +48,7 @@ def load_data(train_size=0.8, testdata=False):
     trainset = np.column_stack((Xtrain,trainlabels['status_group']))
     print trainset.shape
     X_train, X_valid, Y_train, Y_valid = train_test_split(
-        trainset[:, 0:-1], trainset[:, -1], train_size=train_size,
+        trainset[:, 0:-1], trainset[:, -1], train_size=train_size
     )
 
     if testdata:
@@ -57,12 +58,13 @@ def load_data(train_size=0.8, testdata=False):
 
 
 def trainrf():
-    X_train, X_valid, y_train, y_valid = load_data(train_size=0.8, testdata=False)
+    X_train, X_valid, y_train, y_valid = load_data(train_size=0.80, testdata=False)
 
     # Number of trees, increase this to beat the benchmark ;)
-    n_estimators = 1000
+    n_estimators = 200
     clf = RandomForestClassifier(n_jobs=3, n_estimators=n_estimators, max_depth=23)
     #clf=GradientBoostingClassifier(n_estimators=60, max_depth=10, max_features=20, min_samples_leaf=4,verbose=1, subsample=0.85) # 0.85 score
+    #clf = SGDClassifier(loss="hinge", penalty="l2", verbose=True)
     print(" -- Start training.")
     clf.fit(X_train, y_train)
     print clf.feature_importances_

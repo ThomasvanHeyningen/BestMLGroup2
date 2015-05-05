@@ -75,9 +75,15 @@ def load_data(train_size=0.8, testdata=False):
         return(X_train, X_valid, Y_train, Y_valid)
 
 def trainrf():
+    '''
+    Code to train a classifier. Gets the data from load_data.
+
+    Returns: the classifier and an encoder (I think this one is out of use.
+    '''
+    #loading the data from load_data:
     X_train, X_valid, y_train, y_valid = load_data(train_size=0.80, testdata=False)
 
-    # Number of trees, increase this to beat the benchmark ;)
+    # Number of trees, increase this to improve
     n_estimators = 200
     clf = RandomForestClassifier(n_jobs=3, n_estimators=n_estimators, max_depth=23)
     #clf=GradientBoostingClassifier(n_estimators=60, max_depth=10, max_features=20, min_samples_leaf=4,verbose=1, subsample=0.85) # 0.85 score
@@ -101,14 +107,14 @@ def trainrf():
     filedata=pd.DataFrame(data=predictdata)
     filedata.to_csv('predictions.csv', index=False)
     '''
-    encoder = LabelEncoder()
-    y_true = encoder.fit_transform(y_valid)
-    assert (encoder.classes_ == clf.classes_).all()
 
+    return clf
 
-    return clf, encoder
-
-def make_submission(clf, encoder, path='my_submission.csv'):
+def make_submission(clf, path='my_submission.csv'):
+    '''
+    Code to make a submission:
+    Gets a classifier and uses this to classify the test-set which is loaded using load_data
+    '''
     path = sys.argv[3] if len(sys.argv) > 3 else path
     X_test, ids = load_data(testdata=True)
 
@@ -122,12 +128,12 @@ def make_submission(clf, encoder, path='my_submission.csv'):
             f.write('\n')
     print(" -- Wrote submission to file {}.".format(path))
 
-
 def main():
     print(" - Start.")
-    model, encoder = trainrf()
-    make_submission(model, encoder)
+    model = trainrf()
+    make_submission(model)
     print(" - Finished.")
+
 if __name__ == '__main__':
     start_time = time.time()
     main()

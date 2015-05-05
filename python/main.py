@@ -27,19 +27,23 @@ def load_data(train_size=0.8, testdata=False):
     else: the train and validation set from the train data to learn an algorithm
     '''
 
+    # loading the data from relevant files:
     data_dir='..\\data\\'
     train = pd.read_csv(data_dir + 'trainset.csv')
     trainlabels = pd.read_csv(data_dir + 'trainlabels.csv')
     test = pd.read_csv(data_dir + 'testset.csv')
     extratrain=pd.read_csv('extratrainfeatures.csv')
     extratest=pd.read_csv('extratestfeatures.csv')
-    vec = DictVectorizer()
 
+    #out of use:
+    vec = DictVectorizer()
 
     #for name in train.columns[1:-1]:
     #    names_cat.append(name)
     #   print name, len(np.unique(train[name]))
 
+    #The selection of the labels/features to use for the training/testing.
+    #If a label is removed please add it to the removed labels.
     numerical_label = ['gps_height','longitude','latitude','region_code','district_code','population','construction_year']
     #removed labels: num_private
     extra_label=['funder_num','installer_num','basin_num','region_num','lga_num','ward_num'
@@ -50,6 +54,8 @@ def load_data(train_size=0.8, testdata=False):
         ,'month_recorded','age_of_pump','date_recorded_distance_days_20140101','funder_freq','installer_freq'
         ,'basin_freq','region_freq','lga_freq','ward_freq','scheme_name_freq', 'year_recorded']
     #removed labels: recorded_by_num, day_recorded, wpt_name_num, subvillage_num, amount_tsh
+
+    #Processing the labels into the train and test sets.
     X_train_num=train[numerical_label]
     X_test_num=test[numerical_label]
     X_extratrain_num=extratrain[extra_label]
@@ -58,7 +64,7 @@ def load_data(train_size=0.8, testdata=False):
     Xtrain=np.hstack((X_train_num, X_extratrain_num))
     Xtest=np.hstack((X_test_num, X_extratest_num))
     trainset = np.column_stack((Xtrain,trainlabels['status_group']))
-    print trainset.shape
+    #print trainset.shape
     X_train, X_valid, Y_train, Y_valid = train_test_split(
         trainset[:, 0:-1], trainset[:, -1], train_size=train_size
     )
@@ -67,7 +73,6 @@ def load_data(train_size=0.8, testdata=False):
         return (Xtest, test['id'])
     else:
         return(X_train, X_valid, Y_train, Y_valid)
-
 
 def trainrf():
     X_train, X_valid, y_train, y_valid = load_data(train_size=0.80, testdata=False)

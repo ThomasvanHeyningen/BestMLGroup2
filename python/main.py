@@ -75,29 +75,35 @@ def trainclf():
     Returns: the classifier and an encoder (I think this one is out of use.
     '''
     #loading the data from load_data:
-    X_train, X_valid, y_train, y_valid = load_data(train_size=0.80, testdata=False)
+    X_train, X_valid, y_train, y_valid = load_data(train_size=0.8, testdata=False)
 
     # Number of trees, increase this to improve
     clfs = []
     print(" -- Start training.")
-    clf = RandomForestClassifier(n_jobs=3, n_estimators=100, max_depth=23, random_state=5)
+    clf = RandomForestClassifier(n_jobs=3, n_estimators=200, max_depth=23, random_state=80)
     clf.fit(X_train, y_train)
     print('RFC 1 LogLoss {score}'.format(score=log_loss(y_valid, clf.predict_proba(X_valid))))
     print('RFC 1 accuracy {score}'.format(score=accuracy_score(y_valid, clf.predict(X_valid))))
     clfs.append(clf)
 
-    gbm=GradientBoostingClassifier(n_estimators=40, max_depth=10, max_features=15, min_samples_leaf=3,verbose=1, subsample=0.8, random_state=7)
-    gbm.fit(X_train, y_train)
-    print('GBM LogLoss {score}'.format(score=log_loss(y_valid, gbm.predict_proba(X_valid))))
-    print('GBM accuracy {score}'.format(score=accuracy_score(y_valid, gbm.predict(X_valid))))
-    clfs.append(gbm)
+    # gbm=GradientBoostingClassifier(n_estimators=40, max_depth=13, max_features=20, min_samples_leaf=3,verbose=1, subsample=0.85, random_state=87)
+    # gbm.fit(X_train, y_train)
+    # print('GBM LogLoss {score}'.format(score=log_loss(y_valid, gbm.predict_proba(X_valid))))
+    # print('GBM accuracy {score}'.format(score=accuracy_score(y_valid, gbm.predict(X_valid))))
+    # clfs.append(gbm)
 
-    clf2 = RandomForestClassifier(n_jobs=3, n_estimators=100, max_depth=17, random_state=8)
-    clf2.fit(X_train, y_train)
-    print('RFC 1 LogLoss {score}'.format(score=log_loss(y_valid, clf2.predict_proba(X_valid))))
-    print('RFC 1 accuracy {score}'.format(score=accuracy_score(y_valid, clf2.predict(X_valid))))
-    clfs.append(clf2)
-    print(" -- Finished training")
+    # gbm2=GradientBoostingClassifier(n_estimators=40, max_depth=15, max_features=20, min_samples_leaf=5,verbose=1, subsample=0.95, random_state=87)
+    # gbm2.fit(X_train, y_train)
+    # print('GBM 2 LogLoss {score}'.format(score=log_loss(y_valid, gbm2.predict_proba(X_valid))))
+    # print('GBM 2 accuracy {score}'.format(score=accuracy_score(y_valid, gbm2.predict(X_valid))))
+    # clfs.append(gbm2)
+
+    # clf2 = RandomForestClassifier(n_jobs=3, n_estimators=200, max_depth=17, random_state=88)
+    # clf2.fit(X_train, y_train)
+    # print('RFC 2 LogLoss {score}'.format(score=log_loss(y_valid, clf2.predict_proba(X_valid))))
+    # print('RFC 2 accuracy {score}'.format(score=accuracy_score(y_valid, clf2.predict(X_valid))))
+    # clfs.append(clf2)
+    # print(" -- Finished training")
 
     predictions = []
     for clf in clfs:
@@ -132,8 +138,8 @@ def trainclf():
             y_compare.append('non functional')
         else:
             y_compare.append('error')
-    print y_compare
-    print accuracy_score(y_valid, y_compare)
+
+    print ('Ensemble accuracy: {accuracy}'.format(accuracy=accuracy_score(y_valid, y_compare)))
 
     #print clf.feature_importances_
     #y_pred = clf.predict(X_valid)
@@ -157,17 +163,18 @@ def accuracy_func(weights, predictions, y_valid):
 
     return accuracy_score(y_valid, final_prediction)
 
-def make_submission(clfs, weights, path='my_submission.csv'):
+def make_submission(clfs, weights):
     '''
     Code to make a submission:
     Gets a classifier and uses this to classify the test-set which is loaded using load_data
     '''
-    path = sys.argv[3] if len(sys.argv) > 3 else path
+    path = ('..\submissions\my_submission_{date}'.format(date=time.strftime("%y%m%d%H%M")))
     X_test, ids = load_data(testdata=True)
     y_prob_tot = 0
+
     for i in range(len(clfs)):
         y_prob = clfs[i].predict_proba(X_test)
-        y_prob_tot += y_prob[i]*weights[i]
+        y_prob_tot += y_prob*weights[i]
     y_prob_tot=np.array(y_prob_tot)
     max_index=np.argmax(y_prob_tot, axis=1)
     y_pred = []
@@ -193,6 +200,8 @@ def make_submission(clfs, weights, path='my_submission.csv'):
 def main():
     print(" - Start.")
     model, weights = trainclf()
+    #weights have to be saved from an 0.8 split to prevent heavy overfitting when run on full data
+    weights= [0.60421802,  0.24823096,  0.14755102] # RF, GBM, RF
     make_submission(model, weights)
     print(" - Finished.")
 

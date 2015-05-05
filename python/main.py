@@ -6,13 +6,10 @@ import time
 import numpy as np
 import pandas as pd
 
+from scipy.optimize import minimize
 from sklearn.cross_validation import train_test_split
 from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
-from sklearn.linear_model import SGDClassifier
-from sklearn.feature_extraction.text import TfidfTransformer
-from sklearn.metrics import classification_report, accuracy_score
-from sklearn.preprocessing import LabelEncoder
-from sklearn.feature_extraction import DictVectorizer
+from sklearn.metrics import classification_report, accuracy_score, log_loss
 
 def load_data(train_size=0.8, testdata=False):
     '''
@@ -34,9 +31,6 @@ def load_data(train_size=0.8, testdata=False):
     test = pd.read_csv(data_dir + 'testset.csv')
     extratrain=pd.read_csv('extratrainfeatures.csv')
     extratest=pd.read_csv('extratestfeatures.csv')
-
-    #out of use:
-    vec = DictVectorizer()
 
     #for name in train.columns[1:-1]:
     #    names_cat.append(name)
@@ -84,21 +78,68 @@ def trainrf():
     X_train, X_valid, y_train, y_valid = load_data(train_size=0.80, testdata=False)
 
     # Number of trees, increase this to improve
-    n_estimators = 200
-    clf = RandomForestClassifier(n_jobs=3, n_estimators=n_estimators, max_depth=23, random_state=5)
-    #clf=GradientBoostingClassifier(n_estimators=60, max_depth=10, max_features=20, min_samples_leaf=4,verbose=1, subsample=0.85) # 0.85 score
-    #clf = SGDClassifier(loss="hinge", penalty="l2", verbose=True)
-    print(" -- Start training.")
-    clf.fit(X_train, y_train)
-    print clf.feature_importances_
-    y_prob = clf.predict_proba(X_valid)
-    print(" -- Finished training 1")
+    clfs = []
 
-    y_pred = clf.predict(X_valid)
-    print classification_report(y_valid, y_pred)
-    print accuracy_score(y_valid, y_pred)
+    print(" -- Start training.")
+    clf = RandomForestClassifier(n_jobs=3, n_estimators=100, max_depth=23, random_state=5)
+    clf.fit(X_train, y_train)
+    print('RFC 1 LogLoss {score}'.format(score=log_loss(y_valid, clf.predict_proba(X_valid))))
+    print('RFC 1 accuracy {score}'.format(score=accuracy_score(y_valid, clf.predict(X_valid))))
+    clfs.append(clf)
+
+    gbm=GradientBoostingClassifier(n_estimators=40, max_depth=10, max_features=15, min_samples_leaf=3,verbose=1, subsample=0.8, random_state=7)
+    gbm.fit(X_train, y_train)
+    print('GBM LogLoss {score}'.format(score=log_loss(y_valid, gbm.predict_proba(X_valid))))
+    print('GBM accuracy {score}'.format(score=accuracy_score(y_valid, gbm.predict(X_valid))))
+    clfs.append(gbm)
+    
+    clf2 = RandomForestClassifier(n_jobs=3, n_estimators=100, max_depth=23, random_state=8)
+    clf2.fit(X_train, y_train)
+    print('RFC 1 LogLoss {score}'.format(score=log_loss(y_valid, clf2.predict_proba(X_valid))))
+    print('RFC 1 accuracy {score}'.format(score=accuracy_score(y_valid, clf2.predict(X_valid))))
+    clfs.append(clf2)
+    print(" -- Finished training")
+
+    predictions = []
+    for clf in clfs:
+        predictions.append(clf.predict_proba(X_valid))
+    #the algorithms need a starting value, right now we chose 0.5 for all weights
+    #its better to choose many random starting points and run minimize a few times
+    starting_values = [0.5]*len(predictions)
+
+    #adding constraints  and a different solver as suggested by user 16universe
+    #https://kaggle2.blob.core.windows.net/forum-message-attachments/75655/2393/otto%20model%20weights.pdf?sv=2012-02-12&se=2015-05-03T21%3A22%3A17Z&sr=b&sp=r&sig=rkeA7EJC%2BiQ%2FJ%2BcMpcA4lYQLFh6ubNqs2XAkGtFsAv0%3D
+    cons = ({'type':'eq','fun':lambda w: 1-sum(w)})
+    #our weights are bound between 0 and 1
+    bounds = [(0,1)]*len(predictions)
+    print len(predictions)
+    print len(y_valid)
+    res = minimize(log_loss_func, starting_values, (predictions, y_valid),  method='SLSQP', bounds=bounds, constraints=cons)
+
+    print('Ensamble Score: {best_score}'.format(best_score=res['fun']))
+    print('Best Weights: {weights}'.format(weights=res['x']))
+
+    #print clf.feature_importances_
+    #y_pred = clf.predict(X_valid)
+    #print classification_report(y_valid, y_pred)
 
     return clf
+
+def log_loss_func(weights, predictions, y_valid):
+    ''' scipy minimize will pass the weights as a numpy array '''
+    final_prediction = 0
+    for weight, prediction in zip(weights, predictions):
+            final_prediction += weight*prediction
+
+    return log_loss(y_valid, final_prediction)
+
+def accuracy_func(weights, predictions, y_valid):
+    ''' scipy minimize will pass the weights as a numpy array '''
+    final_prediction = 0
+    for weight, prediction in zip(weights, predictions):
+        final_prediction += weight*prediction
+
+    return accuracy_score(y_valid, final_prediction)
 
 def make_submission(clf, path='my_submission.csv'):
     '''

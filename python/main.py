@@ -67,7 +67,7 @@ def load_data(train_size=0.8, testdata=False):
     print("Training set has {0[0]} rows and {0[1]} columns/features".format(train.shape))
     X_train, X_valid, Y_train, Y_valid = train_test_split(
         trainset[:, 0:-1], trainset[:, -1], train_size=train_size
-    )
+    , random_state=6)
 
     if testdata:
         return (Xtest, test['id'])
@@ -85,7 +85,7 @@ def trainrf():
 
     # Number of trees, increase this to improve
     n_estimators = 200
-    clf = RandomForestClassifier(n_jobs=3, n_estimators=n_estimators, max_depth=23)
+    clf = RandomForestClassifier(n_jobs=3, n_estimators=n_estimators, max_depth=23, random_state=5)
     #clf=GradientBoostingClassifier(n_estimators=60, max_depth=10, max_features=20, min_samples_leaf=4,verbose=1, subsample=0.85) # 0.85 score
     #clf = SGDClassifier(loss="hinge", penalty="l2", verbose=True)
     print(" -- Start training.")

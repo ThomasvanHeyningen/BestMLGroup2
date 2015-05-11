@@ -14,12 +14,12 @@ from sklearn.preprocessing import LabelEncoder
 from sklearn.feature_extraction import DictVectorizer
 
 def load_data(train_size=0.8, testdata=False):
-    data_dir='..\\data\\'
+    data_dir='../data/'
     train = pd.read_csv(data_dir + 'trainset.csv')
     trainlabels = pd.read_csv(data_dir + 'trainlabels.csv')
     test = pd.read_csv(data_dir + 'testset.csv')
-    extratrain=pd.read_csv('extratrainfeatures.csv')
-    extratest=pd.read_csv('extratestfeatures.csv')
+    extratrain=pd.read_csv(data_dir + 'extratrainfeatures.csv')
+    extratest=pd.read_csv(data_dir + 'extratestfeatures.csv')
     vec = DictVectorizer()
 
 

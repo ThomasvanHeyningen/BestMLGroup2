@@ -7,6 +7,9 @@ import datetime as dt
 
 from sklearn.preprocessing import LabelEncoder
 
+# Variables used throughout the file
+data_dir='../data/'
+
 def frequency_feature(data_dir,traindata,testdata):
     names_parameters=['installer','basin','region','lga','ward','scheme_name']
     (testrows, testcolumns)=testdata.shape
@@ -55,6 +58,7 @@ def encode_categorical(data_dir,traindata,testdata):
         le = LabelEncoder()
         fitdata=np.append(traindata[feature].values,testdata[feature].values)
         le.fit(fitdata)
+        print feature
         train_cat=le.transform(traindata[feature])
         test_cat = le.transform(testdata[feature])
         newtestdata=np.zeros((testrows,1), dtype=int)
@@ -91,7 +95,7 @@ def date_features(data):
 
 def store_data(newdata, ids=None, data_dir=None, train=True, labels=(''), one=False):
     if train:
-        trainfile = pd.read_csv('extratrainfeatures.csv')
+        trainfile = pd.read_csv(data_dir + 'extratrainfeatures.csv')
         #trainfile=pd.DataFrame(data=ids)  # only needed to generate the file the first time
         trainfile.set_index('id')
         index=0
@@ -101,9 +105,9 @@ def store_data(newdata, ids=None, data_dir=None, train=True, labels=(''), one=Fa
             for label in labels:
                 trainfile[label]=newdata[:,index]
                 index=index+1
-        trainfile.to_csv('extratrainfeatures.csv', index_label='id', index=False)
+        trainfile.to_csv(data_dir + 'extratrainfeatures.csv', index_label='id', index=False)
     else:
-        testfile = pd.read_csv('extratestfeatures.csv')
+        testfile = pd.read_csv(data_dir + 'extratestfeatures.csv')
         #testfile=pd.DataFrame(data=ids) # only needed to generate the file the first time
         testfile.set_index('id')
         index=0
@@ -113,27 +117,26 @@ def store_data(newdata, ids=None, data_dir=None, train=True, labels=(''), one=Fa
             for label in labels:
                 testfile[label]=newdata[:,index]
                 index=index+1
-        testfile.to_csv('extratestfeatures.csv', index_label='id', index=False)
+        testfile.to_csv(data_dir + 'extratestfeatures.csv', index_label='id', index=False)
 
 def main():
     print(" - Start.")
-    data_dir='..\\data\\'
     train = pd.read_csv(data_dir + 'trainset.csv')
     trainlabels = pd.read_csv(data_dir + 'trainlabels.csv')
     test = pd.read_csv(data_dir + 'testset.csv')
 
     #to make the categorical features numeric:
-    #encode_categorical(data_dir,train,test)
+    encode_categorical(data_dir,train,test)
 
 
     #to create the datelabels
-    #newtrain = date_features(train)
-    #newtest = date_features(test)
-    #store_data(newtrain, train['id'], data_dir, train=True,labels=('year_recorded','month_recorded','day_recorded','age_of_pump','date_recorded_distance_days_20140101'))
-    #store_data(newtest, test['id'], data_dir, newtest, train=False,labels=('year_recorded','month_recorded','day_recorded','age_of_pump','date_recorded_distance_days_20140101'))
+    newtrain = date_features(train)
+    newtest = date_features(test)
+    store_data(newtrain, train['id'], data_dir, train=True,labels=('year_recorded','month_recorded','day_recorded','age_of_pump','date_recorded_distance_days_20140101'))
+    store_data(newtest, test['id'], data_dir, newtest, train=False,labels=('year_recorded','month_recorded','day_recorded','age_of_pump','date_recorded_distance_days_20140101'))
 
     #To make features of frequency counts:
-    #frequency_feature(data_dir,train,test)
+    frequency_feature(data_dir,train,test)
 
     print(" - Finished.")
 

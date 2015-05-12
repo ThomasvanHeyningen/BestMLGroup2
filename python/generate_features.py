@@ -103,7 +103,7 @@ def store_data(newdata, ids=None, data_dir=data_dir, train=True, labels=(''), on
         csvfile = pd.read_csv(data_dir + filename)
     else:
         csvfile = pd.DataFrame(data=newdata) # only needed to generate the file the first time
-        csvfile.set_index('id')
+        #csvfile.set_index('id')
     index=0
     if one:
         csvfile[labels]=newdata[:,0]

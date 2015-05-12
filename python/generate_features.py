@@ -4,6 +4,7 @@ import re
 import numpy as np
 import pandas as pd
 import datetime as dt
+import os
 
 from sklearn.preprocessing import LabelEncoder
 
@@ -48,19 +49,22 @@ def frequency_feature(data_dir,traindata,testdata):
 
 
 def encode_categorical(data_dir,traindata,testdata):
-    names_parameters=['funder','installer','wpt_name','basin','subvillage','region','lga','ward','public_meeting','recorded_by'
-        ,'scheme_management','scheme_name','permit','extraction_type','extraction_type_group','extraction_type_class','management','management_group','payment',
-                         'payment_type','water_quality','quality_group','quantity','quantity_group','source','source_type','source_class',
+    # EXCLUDED: 'public_meeting', 'permit'
+    names_parameters=['funder','installer','wpt_name','basin','subvillage','region','lga','ward',
+    'recorded_by', 'scheme_management','scheme_name','extraction_type','extraction_type_group','extraction_type_class','management','management_group','payment',
+                        'payment_type','water_quality','quality_group','quantity','quantity_group','source','source_type','source_class',
                         'waterpoint_type','waterpoint_type_group']
     (testrows, testcolumns)=testdata.shape
     (trainrows, traincolumns)=traindata.shape
+    traindata[names_parameters] = traindata[names_parameters].fillna('nan')
+    testdata [names_parameters] = testdata [names_parameters].fillna('nan')
     for feature in names_parameters:
         le = LabelEncoder()
-        fitdata=np.append(traindata[feature].values,testdata[feature].values)
+        fitdata = np.append(traindata[feature].values,testdata[feature].values)
         le.fit(fitdata)
         print feature
-        train_cat=le.transform(traindata[feature])
-        test_cat = le.transform(testdata[feature])
+        train_cat = le.transform(traindata[feature])
+        test_cat  = le.transform(testdata[feature])
         newtestdata=np.zeros((testrows,1), dtype=int)
         newtestdata[:, 0]=np.array(test_cat)
         store_data(newtestdata, train=False,labels=(feature +'_num'), one=True)
@@ -93,31 +97,21 @@ def date_features(data):
     newdata[:, 4]=np.array(distance)
     return(newdata)
 
-def store_data(newdata, ids=None, data_dir=None, train=True, labels=(''), one=False):
-    if train:
-        trainfile = pd.read_csv(data_dir + 'extratrainfeatures.csv')
-        #trainfile=pd.DataFrame(data=ids)  # only needed to generate the file the first time
-        trainfile.set_index('id')
-        index=0
-        if one:
-            trainfile[labels]=newdata[:,0]
-        else:
-            for label in labels:
-                trainfile[label]=newdata[:,index]
-                index=index+1
-        trainfile.to_csv(data_dir + 'extratrainfeatures.csv', index_label='id', index=False)
+def store_data(newdata, ids=None, data_dir=data_dir, train=True, labels=(''), one=False):
+    filename = 'extratrainfeatures.csv' if train else 'extratestfeatures.csv'
+    if os.path.exists(data_dir + filename):
+        csvfile = pd.read_csv(data_dir + filename)
     else:
-        testfile = pd.read_csv(data_dir + 'extratestfeatures.csv')
-        #testfile=pd.DataFrame(data=ids) # only needed to generate the file the first time
-        testfile.set_index('id')
-        index=0
-        if one:
-            testfile[labels]=newdata[:,0]
-        else:
-            for label in labels:
-                testfile[label]=newdata[:,index]
-                index=index+1
-        testfile.to_csv(data_dir + 'extratestfeatures.csv', index_label='id', index=False)
+        csvfile = pd.DataFrame(data=newdata) # only needed to generate the file the first time
+        csvfile.set_index('id')
+    index=0
+    if one:
+        csvfile[labels]=newdata[:,0]
+    else:
+        for label in labels:
+            csvfile[label]=newdata[:,index]
+            index=index+1
+    csvfile.to_csv(data_dir + filename, index_label='id', index=False)
 
 def main():
     print(" - Start.")
@@ -133,7 +127,7 @@ def main():
     newtrain = date_features(train)
     newtest = date_features(test)
     store_data(newtrain, train['id'], data_dir, train=True,labels=('year_recorded','month_recorded','day_recorded','age_of_pump','date_recorded_distance_days_20140101'))
-    store_data(newtest, test['id'], data_dir, newtest, train=False,labels=('year_recorded','month_recorded','day_recorded','age_of_pump','date_recorded_distance_days_20140101'))
+    store_data(newtest, test['id'], data_dir, train=False,labels=('year_recorded','month_recorded','day_recorded','age_of_pump','date_recorded_distance_days_20140101'))
 
     #To make features of frequency counts:
     frequency_feature(data_dir,train,test)

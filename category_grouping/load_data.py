@@ -23,7 +23,7 @@ CATEGORICALS = ['funder','wpt_name','basin','subvillage','region','lga',
                   'extraction_type','extraction_type_group','installer',
                   'extraction_type_class']
 
-def load_data(train_x_path, train_y_path):
+def load_data(train_x_path=TRAIN_X_PATH, train_y_path=TRAIN_Y_PATH):
     """ Loads the training data in a pandas dataframe.
         The y-values are added to the dataframe as a seperate column
         (called 'status_group'). 

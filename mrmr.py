@@ -18,8 +18,8 @@ def mRMR(data, n, class_vector_name = 'status_group'):
         Uses a greedy approach. It picks the feature with the
         highest correlation with the class vector first, and
         subsequently picks the features with the highest correlation
-        with the class vector, and lowest correlations with the already 
-        selected features.        
+        with the class vector minus the lowest mean correlation with the 
+        already selected features.        
     """
     
     # using correlation as the measure
@@ -42,7 +42,7 @@ def mRMR(data, n, class_vector_name = 'status_group'):
                 cor_x = cor_x / len(sel_feats)             
                        
                 scores = scores + [(cor_y[col] - cor_x, col)]
-        # add the feature with the highest score to the list of selected
+        # add the feature with the highest score to the list of
         # selected features
         scores = sorted(scores, reverse=True)
         sel_feats = sel_feats + [scores[0][1]]

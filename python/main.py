@@ -88,7 +88,7 @@ def trainclf():
     print('RFC 1 LogLoss {score}'.format(score=log_loss(y_valid, clf.predict_proba(X_valid))))
     print('RFC 1 accuracy {score}'.format(score=accuracy_score(y_valid, clf.predict(X_valid))))
     clfs.append(clf)
-
+    
     gbm=GradientBoostingClassifier(n_estimators=40, max_depth=13, max_features=20, min_samples_leaf=3,verbose=1, subsample=0.85, random_state=87)
     gbm.fit(X_train, y_train)
     print('GBM LogLoss {score}'.format(score=log_loss(y_valid, gbm.predict_proba(X_valid))))

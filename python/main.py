@@ -42,14 +42,18 @@ def load_data(train_size=0.8, testdata=False):
     #If a label is removed please add it to the removed labels.
     numerical_label = ['gps_height','longitude','latitude','region_code','district_code','population','construction_year']
     #removed labels: num_private
-    extra_label=['funder_num','installer_num','basin_num','region_num','lga_num','ward_num'
+
+    extra_label=['basin_num','region_num','lga_num','ward_num'
         ,'public_meeting_num','scheme_management_num','scheme_name_num','permit_num','extraction_type_num'
         ,'extraction_type_group_num','extraction_type_class_num','management_num','management_group_num','payment_num'
         ,'payment_type_num','water_quality_num','quantity_num','quantity_group_num','source_num'
         ,'source_class_num','waterpoint_type_num','waterpoint_type_group_num'
-        ,'month_recorded','age_of_pump','date_recorded_distance_days_20140101','funder_freq','installer_freq'
-        ,'basin_freq','region_freq','lga_freq','ward_freq','scheme_name_freq', 'year_recorded']
+        ,'month_recorded','age_of_pump','date_recorded_distance_days_20140101'
+        ,'basin_freq','region_freq','lga_freq','ward_freq','scheme_name_freq', 'year_recorded'
+        ,'funder_clean_num','installer_clean_num', 'funder_clean_freq','installer_clean_freq']
+
     #removed labels: recorded_by_num, day_recorded, wpt_name_num, subvillage_num, amount_tsh,'quality_group_num','source_type_num'
+    #more removed: 'funder_num','installer_num', 'funder_freq','installer_freq'
 
     #Processing the labels into the train and test sets.
     X_train_num=train[numerical_label]
@@ -83,25 +87,25 @@ def trainclf():
     clfs = []
     print(" -- Start training.")
 
-    clf = RandomForestClassifier(n_jobs=3, n_estimators=800, max_depth=23, random_state=80)
+    clf = RandomForestClassifier(n_jobs=3, n_estimators=700, max_depth=23, random_state=180)
     clf.fit(X_train, y_train)
     print('RFC 1 LogLoss {score}'.format(score=log_loss(y_valid, clf.predict_proba(X_valid))))
     print('RFC 1 accuracy {score}'.format(score=accuracy_score(y_valid, clf.predict(X_valid))))
     clfs.append(clf)
-    
-    gbm=GradientBoostingClassifier(n_estimators=40, max_depth=13, max_features=20, min_samples_leaf=3,verbose=1, subsample=0.85, random_state=87)
+
+    gbm=GradientBoostingClassifier(n_estimators=50, max_depth=13, max_features=20, min_samples_leaf=3,verbose=1, subsample=0.85, random_state=187)
     gbm.fit(X_train, y_train)
     print('GBM LogLoss {score}'.format(score=log_loss(y_valid, gbm.predict_proba(X_valid))))
     print('GBM accuracy {score}'.format(score=accuracy_score(y_valid, gbm.predict(X_valid))))
     clfs.append(gbm)
 
-    gbm2=GradientBoostingClassifier(n_estimators=40, max_depth=15, max_features=20, min_samples_leaf=5,verbose=1, subsample=0.95, random_state=86)
+    gbm2=GradientBoostingClassifier(n_estimators=50, max_depth=15, max_features=20, min_samples_leaf=5,verbose=1, subsample=0.90, random_state=186)
     gbm2.fit(X_train, y_train)
     print('GBM 2 LogLoss {score}'.format(score=log_loss(y_valid, gbm2.predict_proba(X_valid))))
     print('GBM 2 accuracy {score}'.format(score=accuracy_score(y_valid, gbm2.predict(X_valid))))
     clfs.append(gbm2)
 
-    clf2 = RandomForestClassifier(n_jobs=3, n_estimators=900, max_depth=17, random_state=88)
+    clf2 = RandomForestClassifier(n_jobs=3, n_estimators=900, max_depth=17, random_state=188)
     clf2.fit(X_train, y_train)
     print('RFC 2 LogLoss {score}'.format(score=log_loss(y_valid, clf2.predict_proba(X_valid))))
     print('RFC 2 accuracy {score}'.format(score=accuracy_score(y_valid, clf2.predict(X_valid))))

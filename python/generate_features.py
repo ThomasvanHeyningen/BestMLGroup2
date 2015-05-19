@@ -158,7 +158,8 @@ def main():
     trainlabels = pd.read_csv(data_dir + 'trainlabels.csv')
     test = pd.read_csv(data_dir + 'testset.csv')
 
-    clean_text(data_dir,train,test)
+    #Clean up textual data to prevent duplicates with different names by removing spaces and uppercase
+    #clean_text(data_dir,train,test)
 
     #to make the categorical features numeric:
     #encode_categorical(data_dir,train,test)

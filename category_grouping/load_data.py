@@ -21,7 +21,7 @@ CATEGORICALS = ['funder','wpt_name','basin','subvillage','region','lga',
                   'quantity_group','source','source_type','source_class',
                   'waterpoint_type','waterpoint_type_group','status_group',
                   'extraction_type','extraction_type_group','installer',
-                  'extraction_type_class']
+                  'extraction_type_class','permit','public_meeting']
 
 def load_data(train_x_path=TRAIN_X_PATH, train_y_path=TRAIN_Y_PATH):
     """ Loads the training data in a pandas dataframe.

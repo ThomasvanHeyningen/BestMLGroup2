@@ -58,26 +58,29 @@ def find_best_grouping(data, column_name, y_name="status_group", prev_entr=2.0):
     min_split_right_names = ""
     
     c = 1
-    tot = len(cats)    
-    for i in range(1,int(len(cats)/2)+1):       
+    tot = len(cats)
+    # find all possible two-way splits (1-4, 2-3 etc.)     
+    for i in range(1,int(len(cats)/2)+1):
+        # Find all combinations of categories of length i
         combs = it.combinations(cats,i)       
         for comb in combs:
             print "\rtesting split", c, "(", i, "-", tot-i, "split)",
-            
+            # divide the categories in the ones that are in this combination
+            # and the ones that are not.
             cats_left = np.array(comb)
             cats_right = np.setdiff1d(cats, comb)
-                        
+            # split the data            
             split_left = data[data[column_name].isin(cats_left)]
             split_right = data[data[column_name].isin(cats_right)]
             
             entropy_left = st.entropy(get_distr(split_left, y_name))
             entropy_right = st.entropy(get_distr(split_right, y_name))
-            
+            # weight the entropy based on the amount of categories in the split.
             w_l = len(cats_left) / float(len(cats))
             w_r = len(cats_right) / float(len(cats))            
             
             entropy_total = w_l * entropy_left + w_r * entropy_right             
-            
+            # save the split with the minimal entropy
             if entropy_total < min_entropy:
                 min_entropy = entropy_total
                 min_split_left = split_left

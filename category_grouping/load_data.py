@@ -28,6 +28,7 @@ def load_data(train_x_path=TRAIN_X_PATH, train_y_path=TRAIN_Y_PATH):
         The y-values are added to the dataframe as a seperate column
         (called 'status_group'). 
     """
+    print "Loading data..."
     # Load the data and merge them into a single dataframe
     train_x = pd.read_csv(train_x_path)
     train_y = pd.read_csv(train_y_path)
@@ -37,9 +38,10 @@ def load_data(train_x_path=TRAIN_X_PATH, train_y_path=TRAIN_Y_PATH):
     for train_cat in CATEGORICALS:
         train[train_cat] = train[train_cat].astype('category')
     
-    print "features found:"
-    for col in train.columns: print "  -", col     
-       
+    #print "features found:"
+    #for col in train.columns: print "  -", col     
+    print "Data loaded!"    
+    
     return train
     
 def factorize_data(data):

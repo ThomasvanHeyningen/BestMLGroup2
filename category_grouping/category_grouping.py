@@ -32,8 +32,9 @@ def group_categories(data, column_name, y_name="status_group"):
     for group in best_grouping:
         if isinstance(group, list):
             new_cat = group[0]
-            for cat in group:
-               data[column_name].replace(cat, new_cat)    
+            for cat in group:                
+                data[column_name].replace(to_replace = cat, value = new_cat, inplace=True)
+                
     return data        
     
        
@@ -94,9 +95,9 @@ def find_best_grouping(data, column_name, y_name="status_group", prev_entr=2.0):
     if min_entropy > prev_entr:
         return [list(cats)]
         
-    print "\n[", min_entropy_left, "]", min_split_left_names
-    print "[", min_entropy_right, "]", min_split_right_names
-    print "weighted entropy = ", min_entropy, "\n"
+    #print "\n[", min_entropy_left, "]", min_split_left_names
+    #print "[", min_entropy_right, "]", min_split_right_names
+    #print "weighted entropy = ", min_entropy, "\n"
         
     left = find_best_grouping(min_split_left, column_name, y_name, min_entropy_left)
     right = find_best_grouping(min_split_right, column_name, y_name, min_entropy_right)

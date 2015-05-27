@@ -31,15 +31,14 @@ def load_data(train_size=0.8, testdata=False):
     # loading the data from relevant files:
     try:
         # Unix
-        data_dir='/../data/'
+        data_dir=os.path.dirname(os.path.abspath('')) + '/data/'
         print(os.path.dirname(os.path.abspath('')))
-        print(os.path.dirname(os.path.dirname(os.path.abspath(''))))
         print (data_dir + 'trainset.csv')
-        train = pd.read_csv(os.path.abspath('') + data_dir + 'trainset.csv')
-        trainlabels = pd.read_csv(os.path.abspath('') + data_dir + 'trainlabels.csv')
-        test = pd.read_csv(os.path.abspath('') + data_dir + 'testset.csv')
-        extratrain=pd.read_csv(os.path.abspath('') + 'extratrainfeatures.csv')
-        extratest=pd.read_csv(os.path.abspath('') + 'extratestfeatures.csv')
+        train = pd.read_csv(data_dir + 'trainset.csv')
+        trainlabels = pd.read_csv(data_dir + 'trainlabels.csv')
+        test = pd.read_csv(data_dir + 'testset.csv')
+        extratrain=pd.read_csv('extratrainfeatures.csv')
+        extratest=pd.read_csv('extratestfeatures.csv')
     except IOError:
         # Windows
 

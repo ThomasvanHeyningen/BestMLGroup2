@@ -32,6 +32,7 @@ def load_data(train_size=0.8, testdata=False):
     try:
         # Unix
         data_dir='../data/'
+
         train = pd.read_csv(data_dir + 'trainset.csv')
         trainlabels = pd.read_csv(data_dir + 'trainlabels.csv')
         test = pd.read_csv(data_dir + 'testset.csv')
@@ -40,6 +41,7 @@ def load_data(train_size=0.8, testdata=False):
     except IOError:
         # Windows
         data_dir='..\\data\\'
+        print ("linux failed")
         train = pd.read_csv(data_dir + 'trainset.csv')
         trainlabels = pd.read_csv(data_dir + 'trainlabels.csv')
         test = pd.read_csv(data_dir + 'testset.csv')

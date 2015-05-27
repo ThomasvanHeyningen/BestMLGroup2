@@ -41,7 +41,7 @@ def load_data(train_size=0.8, testdata=False):
         extratest=pd.read_csv('extratestfeatures.csv')
     except IOError:
         # Windows
-
+        print("failed unix")
         data_dir='..\\data\\'
 
         print (data_dir + 'trainset.csv')

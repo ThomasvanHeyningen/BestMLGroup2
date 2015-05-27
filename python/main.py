@@ -31,7 +31,7 @@ def load_data(train_size=0.8, testdata=False):
     # loading the data from relevant files:
     try:
         # Unix
-        data_dir='../data/'
+        data_dir='/../data/'
         print(os.path.abspath(''))
         print (data_dir + 'trainset.csv')
         train = pd.read_csv(data_dir + 'trainset.csv')

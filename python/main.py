@@ -32,7 +32,7 @@ def load_data(train_size=0.8, testdata=False):
     try:
         # Unix
         data_dir='../data/'
-        print(os.path)
+        print(os.path.abspath(''))
         print (data_dir + 'trainset.csv')
         train = pd.read_csv(data_dir + 'trainset.csv')
         trainlabels = pd.read_csv(data_dir + 'trainlabels.csv')

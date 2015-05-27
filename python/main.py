@@ -8,10 +8,11 @@ import pandas as pd
 
 from scipy.optimize import minimize
 from sklearn.cross_validation import train_test_split
-from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
+from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier, AdaBoostClassifier
 from sklearn.linear_model import SGDClassifier
 from sklearn.metrics import classification_report, accuracy_score, log_loss
 from sklearn.svm import LinearSVC
+from sklearn.ensemble.weight_boosting import AdaBoostClassifier
 
 def load_data(train_size=0.8, testdata=False):
     '''
@@ -87,7 +88,10 @@ def trainclf():
     clfs = []
     print(" -- Start training.")
 
+    # Normal RandomForestClassifier
     clf = RandomForestClassifier(n_jobs=3, n_estimators=700, max_depth=23, random_state=180)
+    # AdaBoost with RF, random_state omitted, max_depth & n_estimators lower
+    #clf = AdaBoostClassifier(RandomForestClassifier(n_jobs=3, n_estimators=200, max_depth=15))
     clf.fit(X_train, y_train)
     print('RFC 1 LogLoss {score}'.format(score=log_loss(y_valid, clf.predict_proba(X_valid))))
     print('RFC 1 accuracy {score}'.format(score=accuracy_score(y_valid, clf.predict(X_valid))))
@@ -176,10 +180,11 @@ def make_submission(clfs, weights):
     Code to make a submission:
     Gets a classifier and uses this to classify the test-set which is loaded using load_data
     '''
-    path = ('..\submissions\my_submission_{date}'.format(date=time.strftime("%y%m%d%H%M")))
+    path = ('..\submissions\my_submission_{date}.csv'.format(date=time.strftime("%y%m%d%H%M")))
+
     X_test, ids = load_data(testdata=True)
     y_prob_tot = 0
-
+    
     for i in range(len(clfs)):
         y_prob = clfs[i].predict_proba(X_test)
         y_prob_tot += y_prob*weights[i]

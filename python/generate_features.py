@@ -6,6 +6,30 @@ import pandas as pd
 import datetime as dt
 
 from sklearn.preprocessing import LabelEncoder
+from sklearn.neighbors import KNeighborsClassifier
+
+def closepumps(data_dir,traindata,testdata, trainlabels, k=5):
+    names_parameters=['longitude', 'latitude']
+    (testrows, testcolumns)=testdata.shape
+    (trainrows, traincolumns)=traindata.shape
+    traindata= traindata.fillna(-1)
+    testdata = testdata.fillna(-1)
+    train = np.column_stack((traindata['longitude'], traindata['latitude']))
+    test = np.column_stack((testdata['longitude'], testdata['latitude']))
+
+    clf = KNeighborsClassifier(k, weights='distance')
+    print test.shape
+    clf.fit(train, np.array(trainlabels))
+    #trainnew = clf.predict_proba(train)
+    testnew = clf.predict_proba(test)
+
+    #print(trainnew.shape)
+    print(testnew.shape)
+
+    #traindata[feature +'_clean'] = pd.Series(train_text, index=traindata.index)
+    #testdata[feature +'_clean'] = pd.Series(test_text, index=testdata.index)
+    #encode_categorical(data_dir,traindata,testdata, ['funder_clean', 'installer_clean'])
+    #frequency_feature(data_dir,traindata,testdata, ['funder_clean', 'installer_clean'])
 
 def clean_text(data_dir,traindata,testdata):
     names_parameters=['funder', 'installer']
@@ -188,6 +212,8 @@ def main():
     #to make the categorical features numeric:
     #encode_categorical(data_dir,train,test)
 
+    #feature on distance to other pumps:
+    closepumps(data_dir,train,test, trainlabels, k=35)
 
     #to create the datelabels
     #newtrain = date_features(train)

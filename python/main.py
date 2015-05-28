@@ -14,6 +14,7 @@ from sklearn.linear_model import SGDClassifier
 from sklearn.metrics import classification_report, accuracy_score, log_loss
 from sklearn.svm import LinearSVC
 from sklearn.ensemble.weight_boosting import AdaBoostClassifier
+from sklearn.neighbors import KNeighborsClassifier
 
 def load_data(train_size=0.8, testdata=False):
     '''
@@ -95,16 +96,22 @@ def trainclf():
     Returns: the classifier and an encoder (I think this one is out of use.
     '''
     #loading the data from load_data:
-    X_train, X_valid, y_train, y_valid = load_data(train_size=0.9999, testdata=False)
+    X_train, X_valid, y_train, y_valid = load_data(train_size=0.8, testdata=False)
 
     # Number of trees, increase this to improve
     clfs = []
     print(" -- Start training.")
 
+    nn = KNeighborsClassifier(15, weights='distance')
+    nn.fit(X_train, y_train)
+    print('nn 1 LogLoss {score}'.format(score=log_loss(y_valid, nn.predict_proba(X_valid))))
+    print('nn 1 accuracy {score}'.format(score=accuracy_score(y_valid, nn.predict(X_valid))))
+    clfs.append(nn)
+
     # Normal RandomForestClassifier
-    clf = RandomForestClassifier(n_jobs=3, n_estimators=700, max_depth=23, random_state=180)
-    # AdaBoost with RF, random_state omitted, max_depth & n_estimators lower
-    #clf = AdaBoostClassifier(RandomForestClassifier(n_jobs=3, n_estimators=200, max_depth=15))
+    clf = RandomForestClassifier(n_jobs=3, n_estimators=200, max_depth=23, random_state=180)
+#   AdaBoost with RF, random_state omitted, max_depth & n_estimators lower
+#   clf = AdaBoostClassifier(RandomForestClassifier(n_jobs=3, n_estimators=200, max_depth=15))
     clf.fit(X_train, y_train)
     print('RFC 1 LogLoss {score}'.format(score=log_loss(y_valid, clf.predict_proba(X_valid))))
     print('RFC 1 accuracy {score}'.format(score=accuracy_score(y_valid, clf.predict(X_valid))))
@@ -122,7 +129,7 @@ def trainclf():
     print('GBM 2 accuracy {score}'.format(score=accuracy_score(y_valid, gbm2.predict(X_valid))))
     clfs.append(gbm2)
 
-    clf2 = RandomForestClassifier(n_jobs=3, n_estimators=900, max_depth=17, random_state=188)
+    clf2 = RandomForestClassifier(n_jobs=3, n_estimators=200, max_depth=17, random_state=188)
     clf2.fit(X_train, y_train)
     print('RFC 2 LogLoss {score}'.format(score=log_loss(y_valid, clf2.predict_proba(X_valid))))
     print('RFC 2 accuracy {score}'.format(score=accuracy_score(y_valid, clf2.predict(X_valid))))
@@ -228,7 +235,7 @@ def main():
     model, weights = trainclf()
     #weights have to be saved from an 0.8 split to prevent heavy overfitting when run on full data
     weights= [0.35, 0.20, 0.25, 0.20] # RF, GBM, GBM2, RF2
-    make_submission(model, weights)
+    #make_submission(model, weights)
     print(" - Finished.")
 
 if __name__ == '__main__':

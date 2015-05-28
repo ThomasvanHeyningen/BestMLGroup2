@@ -1,4 +1,4 @@
-import sys
+import os
 import time
 import re
 import numpy as np
@@ -126,8 +126,16 @@ def date_features(data):
     return(newdata)
 
 def store_data(newdata, ids=None, data_dir=None, train=True, labels=(''), one=False):
+
     if train:
-        trainfile = pd.read_csv('extratrainfeatures.csv')
+        try:
+            # Unix
+            data_dir=os.path.dirname(os.path.abspath('')) + '/data/'
+            trainfile = pd.read_csv(data_dir + 'extratrainfeatures.csv')
+        except IOError:
+            # Windows
+            data_dir='..\\data\\'
+            trainfile = pd.read_csv(data_dir + 'extratrainfeatures.csv')
         #trainfile=pd.DataFrame(data=ids)  # only needed to generate the file the first time
         trainfile.set_index('id')
         index=0
@@ -137,9 +145,16 @@ def store_data(newdata, ids=None, data_dir=None, train=True, labels=(''), one=Fa
             for label in labels:
                 trainfile[label]=newdata[:,index]
                 index=index+1
-        trainfile.to_csv('extratrainfeatures.csv', index_label='id', index=False)
+        trainfile.to_csv(data_dir + 'extratrainfeatures.csv', index_label='id', index=False)
     else:
-        testfile = pd.read_csv('extratestfeatures.csv')
+        try:
+            # Unix
+            data_dir=os.path.dirname(os.path.abspath('')) + '/data/'
+            testfile = pd.read_csv(data_dir + 'extratestfeatures.csv')
+        except IOError:
+            # Windows
+            data_dir='..\\data\\'
+            testfile = pd.read_csv(data_dir + 'extratestfeatures.csv')
         #testfile=pd.DataFrame(data=ids) # only needed to generate the file the first time
         testfile.set_index('id')
         index=0
@@ -149,14 +164,23 @@ def store_data(newdata, ids=None, data_dir=None, train=True, labels=(''), one=Fa
             for label in labels:
                 testfile[label]=newdata[:,index]
                 index=index+1
-        testfile.to_csv('extratestfeatures.csv', index_label='id', index=False)
+        testfile.to_csv(data_dir + 'extratestfeatures.csv', index_label='id', index=False)
 
 def main():
     print(" - Start.")
-    data_dir='..\\data\\'
-    train = pd.read_csv(data_dir + 'trainset.csv')
-    trainlabels = pd.read_csv(data_dir + 'trainlabels.csv')
-    test = pd.read_csv(data_dir + 'testset.csv')
+    try:
+        # Unix
+        data_dir=os.path.dirname(os.path.abspath('')) + '/data/'
+
+        train = pd.read_csv(data_dir + 'trainset.csv')
+        trainlabels = pd.read_csv(data_dir + 'trainlabels.csv')
+        test = pd.read_csv(data_dir + 'testset.csv')
+    except IOError:
+        # Windows
+        data_dir='..\\data\\'
+        train = pd.read_csv(data_dir + 'trainset.csv')
+        trainlabels = pd.read_csv(data_dir + 'trainlabels.csv')
+        test = pd.read_csv(data_dir + 'testset.csv')
 
     #Clean up textual data to prevent duplicates with different names by removing spaces and uppercase
     #clean_text(data_dir,train,test)

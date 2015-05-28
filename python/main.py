@@ -102,11 +102,14 @@ def trainclf():
     clfs = []
     print(" -- Start training.")
 
+    ## nearest neighbor classifier .70 accuracy (too low to be considered by the ensemble).
+    '''
     nn = KNeighborsClassifier(15, weights='distance')
     nn.fit(X_train, y_train)
     print('nn 1 LogLoss {score}'.format(score=log_loss(y_valid, nn.predict_proba(X_valid))))
     print('nn 1 accuracy {score}'.format(score=accuracy_score(y_valid, nn.predict(X_valid))))
     clfs.append(nn)
+    '''
 
     # Normal RandomForestClassifier
     clf = RandomForestClassifier(n_jobs=3, n_estimators=200, max_depth=23, random_state=180)

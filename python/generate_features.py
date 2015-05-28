@@ -9,6 +9,9 @@ from sklearn.preprocessing import LabelEncoder
 from sklearn.neighbors import KNeighborsClassifier
 
 def closepumps(data_dir,traindata,testdata, trainlabels, k=5):
+    '''
+    This one does NOT WORK!!!
+    '''
     names_parameters=['longitude', 'latitude']
     (testrows, testcolumns)=testdata.shape
     (trainrows, traincolumns)=traindata.shape
@@ -213,7 +216,7 @@ def main():
     #encode_categorical(data_dir,train,test)
 
     #feature on distance to other pumps:
-    closepumps(data_dir,train,test, trainlabels, k=35)
+    #closepumps(data_dir,train,test, trainlabels, k=35)
 
     #to create the datelabels
     #newtrain = date_features(train)

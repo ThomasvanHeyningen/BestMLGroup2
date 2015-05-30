@@ -137,7 +137,7 @@ def trainclf():
     print('RFC 2 LogLoss {score}'.format(score=log_loss(y_valid, clf2.predict_proba(X_valid))))
     print('RFC 2 accuracy {score}'.format(score=accuracy_score(y_valid, clf2.predict(X_valid))))
     clfs.append(clf2)
-    
+
     print(" -- Finished training")
 
     predictions = []

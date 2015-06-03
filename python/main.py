@@ -1,4 +1,3 @@
-
 from __future__ import division
 import sys
 import time
@@ -53,7 +52,7 @@ def load_data(train_size=0.8, testdata=False):
     if testdata:
         return (Xtest, test['id'])
     else:
-        return(X_train, X_valid, Y_train, Y_valid)
+        return (X_train, X_valid, Y_train, Y_valid)
 
 
 def trainrf():

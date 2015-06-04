@@ -15,6 +15,9 @@ from sklearn.metrics import classification_report, accuracy_score, log_loss
 from sklearn.svm import LinearSVC
 from sklearn.ensemble.weight_boosting import AdaBoostClassifier
 from sklearn.neighbors import KNeighborsClassifier
+from keras.models import Sequential
+from keras.layers.core import Dense, Dropout, Activation
+from keras.optimizers import SGD
 
 def load_data(train_size=0.8, testdata=False):
     '''
@@ -137,6 +140,12 @@ def trainclf():
     print('RFC 2 LogLoss {score}'.format(score=log_loss(y_valid, clf2.predict_proba(X_valid))))
     print('RFC 2 accuracy {score}'.format(score=accuracy_score(y_valid, clf2.predict(X_valid))))
     clfs.append(clf2)
+    
+    clfmlp = MultiLayerPerceptron()
+    clfmlp.fit(X_train, y_train, nb_epoch=20, batch_size=16)
+    print('MLP LogLoss {score}'.format(score=log_loss(y_valid, clfmlp.predict_proba(X_valid))))
+    print('MLP accuracy {score}'.format(score=accuracy_score(y_valid, clfmlp.predict(X_valid))))
+    clfs.append(clfmlp)
 
     print(" -- Finished training")
 
@@ -181,6 +190,20 @@ def trainclf():
     #print classification_report(y_valid, y_pred)
 
     return clfs, res['x']
+
+def MultiLayerPerceptron():
+    model = Sequential()
+    model.add(Dense(20, 64, init='uniform'))
+    model.add(Activation('tanh'))
+    model.add(Dropout(0.5))
+    model.add(Dense(64, 64, init='uniform'))
+    model.add(Activation('tanh'))
+    model.add(Dropout(0.5))
+    model.add(Dense(64, 2, init='uniform'))
+    model.add(Activation('softmax'))
+    sgd = SGD(lr=0.1, decay=1e-6, momentum=0.9, nesterov=True)
+    model.compile(loss='mean_squared_error', optimizer=sgd)
+    return model
 
 def log_loss_func(weights, predictions, y_valid):
     ''' scipy minimize will pass the weights as a numpy array '''

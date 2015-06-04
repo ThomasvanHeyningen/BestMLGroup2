@@ -260,7 +260,8 @@ def main():
     print(" - Start.")
     model, weights = trainclf()
     #weights have to be saved from an 0.8 split to prevent heavy overfitting when run on full data
-    weights= [0.35, 0.20, 0.25, 0.20] # RF, GBM, GBM2, RF2
+    #weights= [0.35, 0.20, 0.25, 0.20] # RF, GBM, GBM2, RF2
+    weights= [0.25, 0.20, 0.20, 0.15, 0.20] # RF, GBM, GBM2, RF2, MLP
     #make_submission(model, weights)
     print(" - Finished.")
 

@@ -16,6 +16,7 @@ from sklearn.svm import LinearSVC
 from sklearn.ensemble.weight_boosting import AdaBoostClassifier
 from sklearn.neighbors import KNeighborsClassifier
 from multilayer_perceptron  import MultilayerPerceptronClassifier
+from sklearn.feature_extraction.text import TfidfTransformer
 
 def load_data(train_size=0.8, testdata=False):
     '''
@@ -91,6 +92,10 @@ def load_data(train_size=0.8, testdata=False):
         return(X_train, X_valid, Y_train, Y_valid)
 
 def trainmlp():
+    '''
+
+    DEZE FUNCTIE IS OM WEG TE GOOIEN, MAAR KAN ALS INSPIRATIE GEBruikt wordebn,
+    '''
     for i in [70]:
         trainstart = time.time()
 
@@ -154,13 +159,19 @@ def trainclf():
     print('nn 1 accuracy {score}'.format(score=accuracy_score(y_valid, nn.predict(X_valid))))
     clfs.append(nn)
     '''
-
+    ''' #Code voor MLP
+    transformer = TfidfTransformer(norm='l2', smooth_idf=True, sublinear_tf=False, use_idf=True)
+    X_test, ids = load_data(testdata=True) #TESTDATA WATCH OUT DO NOT USE!!
+    transformer.fit_transform(np.vstack([X_valid,X_train, X_test]))
+    X_train_tf = transformer.transform(X_train)
+    X_valid_tf = transformer.transform(X_valid)
     mlp = MultilayerPerceptronClassifier(hidden_layer_sizes = (20,10), activation = 'logistic',\
                                              max_iter = 200, alpha = 0.00025, verbose=0, learning_rate='invscaling', learning_rate_init=0.9, power_t=0.8)
-    mlp.fit(X_train, y_train)
-    print('RFC 1 LogLoss {score}'.format(score=log_loss(y_valid, mlp.predict_proba(X_valid))))
-    print('RFC 1 accuracy {score}'.format(score=accuracy_score(y_valid, mlp.predict(X_valid))))
+    mlp.fit(X_train_tf, y_train)
+    print('RFC 1 LogLoss {score}'.format(score=log_loss(y_valid, mlp.predict_proba(X_valid_tf))))
+    print('RFC 1 accuracy {score}'.format(score=accuracy_score(y_valid, mlp.predict(X_valid_tf))))
     clfs.append(mlp)
+    '''
 
     # Normal RandomForestClassifier
     clf = RandomForestClassifier(n_jobs=3, n_estimators=200, max_depth=23, random_state=180)

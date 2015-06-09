@@ -119,12 +119,62 @@ def trainclf():
     X_train_tf = transformer.transform(X_train)
     X_valid_tf = transformer.transform(X_valid)
 
-    mlp = MultilayerPerceptronClassifier(hidden_layer_sizes = (20,10), activation = 'logistic',\
+    mlp = MultilayerPerceptronClassifier(hidden_layer_sizes = (50,20), activation = 'logistic',\
                                              max_iter = 200, alpha = 0.00025, verbose=0, learning_rate='invscaling', learning_rate_init=0.9, power_t=0.8)
     mlp.fit(X_train_tf, y_train)
     print('MLP LogLoss {score}'.format(score=log_loss(y_valid, mlp.predict_proba(X_valid_tf))))
     print('MLP accuracy {score}'.format(score=accuracy_score(y_valid, mlp.predict(X_valid_tf))))
     clfs.append(mlp)
+
+    mlp = MultilayerPerceptronClassifier(hidden_layer_sizes = (70), activation = 'logistic',\
+                                             max_iter = 200, alpha = 0.005, verbose=0, learning_rate='invscaling', learning_rate_init=0.8, power_t=0.7)
+    mlp.fit(X_train_tf, y_train)
+    print('MLP 2 LogLoss {score}'.format(score=log_loss(y_valid, mlp.predict_proba(X_valid_tf))))
+    print('MLP accuracy {score}'.format(score=accuracy_score(y_valid, mlp.predict(X_valid_tf))))
+    clfs.append(mlp)
+
+    mlp = MultilayerPerceptronClassifier(hidden_layer_sizes = (50), activation = 'logistic',\
+                                             max_iter = 200, alpha = 0.0007, verbose=0, learning_rate='invscaling', learning_rate_init=0.9, power_t=0.8)
+    mlp.fit(X_train, y_train)
+    print('MLP 3 LogLoss {score}'.format(score=log_loss(y_valid, mlp.predict_proba(X_valid))))
+    print('MLP accuracy {score}'.format(score=accuracy_score(y_valid, mlp.predict(X_valid))))
+    clfs.append(mlp)
+
+    mlp = MultilayerPerceptronClassifier(hidden_layer_sizes = (30, 50, 10), activation = 'logistic',\
+                                             max_iter = 200, alpha = 0.00008, verbose=0, learning_rate='invscaling', learning_rate_init=0.7, power_t=0.8)
+    mlp.fit(X_train_tf, y_train)
+    print('MLP 4 LogLoss {score}'.format(score=log_loss(y_valid, mlp.predict_proba(X_valid_tf))))
+    print('MLP accuracy {score}'.format(score=accuracy_score(y_valid, mlp.predict(X_valid_tf))))
+    clfs.append(mlp)
+
+    mlp = MultilayerPerceptronClassifier(hidden_layer_sizes = (70), activation = 'logistic',\
+                                             max_iter = 200, alpha = 0.00025, verbose=0, learning_rate='invscaling', learning_rate_init=0.9, power_t=0.8)
+    mlp.fit(X_train_tf, y_train)
+    print('MLP 5 LogLoss {score}'.format(score=log_loss(y_valid, mlp.predict_proba(X_valid_tf))))
+    print('MLP accuracy {score}'.format(score=accuracy_score(y_valid, mlp.predict(X_valid_tf))))
+    clfs.append(mlp)
+
+    mlp = MultilayerPerceptronClassifier(hidden_layer_sizes = (50,20), activation = 'relu',\
+                                             max_iter = 200, alpha = 0.00025, verbose=0, learning_rate='invscaling', learning_rate_init=0.9, power_t=0.8)
+    mlp.fit(X_train_tf, y_train)
+    print('MLP 6 LogLoss {score}'.format(score=log_loss(y_valid, mlp.predict_proba(X_valid_tf))))
+    print('MLP accuracy {score}'.format(score=accuracy_score(y_valid, mlp.predict(X_valid_tf))))
+    clfs.append(mlp)
+
+    mlp = MultilayerPerceptronClassifier(hidden_layer_sizes = (70), activation = 'relu',\
+                                             max_iter = 200, alpha = 0.00025, verbose=0, learning_rate='invscaling', learning_rate_init=0.9, power_t=0.8)
+    mlp.fit(X_train_tf, y_train)
+    print('MLP 7 LogLoss {score}'.format(score=log_loss(y_valid, mlp.predict_proba(X_valid_tf))))
+    print('MLP accuracy {score}'.format(score=accuracy_score(y_valid, mlp.predict(X_valid_tf))))
+    clfs.append(mlp)
+
+    mlp = MultilayerPerceptronClassifier(hidden_layer_sizes = (100), activation = 'relu',\
+                                             max_iter = 200, alpha = 0.0005, verbose=0, learning_rate='invscaling', learning_rate_init=0.7, power_t=0.8)
+    mlp.fit(X_train_tf, y_train)
+    print('MLP 8 LogLoss {score}'.format(score=log_loss(y_valid, mlp.predict_proba(X_valid_tf))))
+    print('MLP accuracy {score}'.format(score=accuracy_score(y_valid, mlp.predict(X_valid_tf))))
+    clfs.append(mlp)
+
 
     # Normal RandomForestClassifier
     clf = RandomForestClassifier(n_jobs=3, n_estimators=200, max_depth=23, random_state=180)

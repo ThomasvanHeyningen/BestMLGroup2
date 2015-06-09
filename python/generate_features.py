@@ -253,6 +253,8 @@ def main():
         train = pd.read_csv(data_dir + 'trainset.csv')
         trainlabels = pd.read_csv(data_dir + 'trainlabels.csv')
         test = pd.read_csv(data_dir + 'testset.csv')
+        newtrain = pd.read_csv(data_dir + 'nieuwtrain.csv')
+        newtest = pd.read_csv(data_dir + 'nieuwtest.csv')
     except IOError:
         # Windows
         data_dir='..\\data\\'
@@ -269,14 +271,8 @@ def main():
     #encode_categorical(data_dir,train,test)
 
     #feature on distance to other pumps:
-    closepumps(data_dir,train,test, trainlabels, k=5) # ran it with k=5,10,20 and 40
-    print "5 done"
-    closepumps(data_dir,train,test, trainlabels, k=10) # ran it with k=5,10,20 and 40
-    print "10 done"
-    closepumps(data_dir,train,test, trainlabels, k=20) # ran it with k=5,10,20 and 40
-    print "20 done"
-    closepumps(data_dir,train,test, trainlabels, k=40) # ran it with k=5,10,20 and 40
-    print "40 done"
+    #closepumps(data_dir,train,test, trainlabels, k=5) # ran it with k=5,10,20 and 40
+
 
     #to create the datelabels
     #newtrain = date_features(train)

@@ -81,14 +81,15 @@ def load_data(train_size=0.8, testdata=False):
     Xtrain=np.hstack((X_train_num, X_extratrain_num))
     Xtest=np.hstack((X_test_num, X_extratest_num))
     trainset = np.column_stack((Xtrain,trainlabels['status_group']))
-    print("Training set has {0[0]} rows and {0[1]} columns/features".format(train.shape))
     X_train, X_valid, Y_train, Y_valid = train_test_split(
         trainset[:, 0:-1], trainset[:, -1], train_size=train_size
     , random_state=6)
 
     if testdata:
+        print("Testing set has {0[0]} rows and {0[1]} columns/features".format(test.shape))
         return (Xtest, test['id'])
-    else:
+    else: 
+        print("Training set has {0[0]} rows and {0[1]} columns/features".format(train.shape))
         return(X_train.astype(float), X_valid.astype(float), Y_train.astype(str), Y_valid.astype(str))
 
 def trainclf():

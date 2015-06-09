@@ -48,10 +48,10 @@ def closepumps(data_dir,traindata,testdata, trainlabels, k=5):
     testbrokenarray =[]
 
     for i in xrange(0, len(testindices)):
+        functional = 0
+        repair=0
+        broken=0
         for pump in testindices[i][:-1]:
-            functional = 0
-            repair=0
-            broken=0
             pumplabel = trainlabels.loc[pump]['status_group']
             if(pumplabel=='functional needs repair'):
                 repair+=1
@@ -63,11 +63,9 @@ def closepumps(data_dir,traindata,testdata, trainlabels, k=5):
         testfunctionalarray.append(functional)
         testrepairarray.append(repair)
         testbrokenarray.append(broken)
-
     newtestdata=np.zeros((testrows,1), dtype=int)
     newtestdata[:, 0]=np.array(testfunctionalarray)
     store_data(newtestdata, train=False,labels=(str(k) + '_nearest_functional'), one=True)
-
     newtestdata=np.zeros((testrows,1), dtype=int)
     newtestdata[:, 0]=np.array(testrepairarray)
     store_data(newtestdata, train=False,labels=(str(k) + '_nearest_need_repair'), one=True)
@@ -81,7 +79,7 @@ def closepumps(data_dir,traindata,testdata, trainlabels, k=5):
     newtraindata[:, 0]=np.array(trainrepairarray)
     store_data(newtraindata, train=True,labels=(str(k) + '_nearest_need_repair'), one=True)
     newtraindata=np.zeros((trainrows,1), dtype=int)
-    newtraindata[:, 0]=np.array(testbrokenarray)
+    newtraindata[:, 0]=np.array(trainbrokenarray)
     store_data(newtraindata, train=True,labels=(str(k) + '_nearest_broken'), one=True)
     #encode_categorical(data_dir,traindata,testdata, ['funder_clean', 'installer_clean'])
     #frequency_feature(data_dir,traindata,testdata, ['funder_clean', 'installer_clean'])
@@ -111,10 +109,10 @@ def clean_text(data_dir,traindata,testdata):
             else:
                 test_text.append(text.lower().replace(" ", ""))
 
-        traindata[feature +'_clean'] = pd.Series(train_text, index=traindata.index)
-        testdata[feature +'_clean'] = pd.Series(test_text, index=testdata.index)
-    encode_categorical(data_dir,traindata,testdata, ['funder_clean', 'installer_clean'])
-    frequency_feature(data_dir,traindata,testdata, ['funder_clean', 'installer_clean'])
+        traindata[feature +'_clean2'] = pd.Series(train_text, index=traindata.index)
+        testdata[feature +'_clean2'] = pd.Series(test_text, index=testdata.index)
+    encode_categorical(data_dir,traindata,testdata, ['funder_clean2', 'installer_clean2'])
+    frequency_feature(data_dir,traindata,testdata, ['funder_clean2', 'installer_clean2'])
 
 
 def frequency_feature(data_dir,traindata,testdata, parameters=None):
@@ -261,15 +259,24 @@ def main():
         train = pd.read_csv(data_dir + 'trainset.csv')
         trainlabels = pd.read_csv(data_dir + 'trainlabels.csv')
         test = pd.read_csv(data_dir + 'testset.csv')
+        newtrain = pd.read_csv(data_dir + 'nieuwtrain.csv')
+        newtest = pd.read_csv(data_dir + 'nieuwtest.csv')
 
     #Clean up textual data to prevent duplicates with different names by removing spaces and uppercase
-    #clean_text(data_dir,train,test)
+    #clean_text(data_dir,newtrain,newtest)
 
     #to make the categorical features numeric:
     #encode_categorical(data_dir,train,test)
 
     #feature on distance to other pumps:
-    closepumps(data_dir,train,test, trainlabels, k=5)
+    closepumps(data_dir,train,test, trainlabels, k=5) # ran it with k=5,10,20 and 40
+    print "5 done"
+    closepumps(data_dir,train,test, trainlabels, k=10) # ran it with k=5,10,20 and 40
+    print "10 done"
+    closepumps(data_dir,train,test, trainlabels, k=20) # ran it with k=5,10,20 and 40
+    print "20 done"
+    closepumps(data_dir,train,test, trainlabels, k=40) # ran it with k=5,10,20 and 40
+    print "40 done"
 
     #to create the datelabels
     #newtrain = date_features(train)

@@ -89,54 +89,7 @@ def load_data(train_size=0.8, testdata=False):
     if testdata:
         return (Xtest, test['id'])
     else:
-        return(X_train, X_valid, Y_train, Y_valid)
-
-def trainmlp():
-    '''
-
-    DEZE FUNCTIE IS OM WEG TE GOOIEN, MAAR KAN ALS INSPIRATIE GEBruikt wordebn,
-    '''
-    for i in [70]:
-        trainstart = time.time()
-
-        transformer = TfidfTransformer(norm='l2', smooth_idf=True, sublinear_tf=False, use_idf=True)
-        X_train, X_valid, y_train, y_valid = load_train_data(train_size=0.8)
-
-        X_train= np.hstack((X_train, np.sum(X_train, axis=1, keepdims=True))) #the sum of each row (item)
-        X_valid= np.hstack((X_valid, np.sum(X_valid, axis=1, keepdims=True)))
-        X_train= np.hstack((X_train, np.sum((X_train == 0), axis=1, keepdims=True))) #the number of zeros in each item
-        X_train= np.hstack((X_train, np.sum((X_train == 1), axis=1, keepdims=True))) #the number of ones in each item
-        X_valid= np.hstack((X_valid, np.sum((X_valid == 0), axis=1, keepdims=True)))
-        X_valid= np.hstack((X_valid, np.sum((X_valid == 1), axis=1, keepdims=True)))
-        #print X_valid[2364,:]
-        ''' tf idf, have to put this back for 0.01 improvement
-        X_test, ids = load_test_data() # the TEST DATA!!!!
-
-        transformer.fit_transform(np.vstack([X_valid,X_train, X_test]))
-        X_train_tf = transformer.transform(X_train)
-        X_train = np.hstack([X_train, X_train_tf.toarray()])
-        X_valid_tf = transformer.transform(X_valid)
-        X_valid = np.hstack([X_valid, X_valid_tf.toarray()])
-        '''
-
-        # Create MLP Object
-        # Please see line 562 in "multilayer_perceptron.py" for more information
-        # about the parameters
-        mlp = MultilayerPerceptronClassifier(hidden_layer_sizes = i, activation = 'logistic',\
-                                             max_iter = 200, alpha = 0.00025, verbose=0, learning_rate='invscaling', learning_rate_init=0.9, power_t=0.8)
-
-        print "Training MLP"
-        mlp.fit(X_train, y_train)
-        print "Finished training MLP"
-        y_prob= mlp.predict_proba(X_valid)
-        encoder = LabelEncoder()
-        y_true = encoder.fit_transform(y_valid)
-        assert (encoder.classes_ == mlp.classes_).all()
-
-        print(" -- Multiclass logloss on validation set: {:.4f}.".format(score))
-        #print("--- training of perceptron took %s seconds ---" % (time.time() - trainstart))
-        print ("i was: %s" (i))
-    return mlp, encoder, transformer
+        return(X_train.astype(float), X_valid.astype(float), Y_train.astype(str), Y_valid.astype(str))
 
 def trainclf():
     '''
@@ -151,27 +104,27 @@ def trainclf():
     clfs = []
     print(" -- Start training.")
 
-    ## nearest neighbor classifier .70 accuracy (too low to be considered by the ensemble).
     '''
+    # K-nearest neighbor classifier .70 accuracy (too low to be considered by the ensemble).
     nn = KNeighborsClassifier(15, weights='distance')
     nn.fit(X_train, y_train)
     print('nn 1 LogLoss {score}'.format(score=log_loss(y_valid, nn.predict_proba(X_valid))))
     print('nn 1 accuracy {score}'.format(score=accuracy_score(y_valid, nn.predict(X_valid))))
     clfs.append(nn)
     '''
-    ''' #Code voor MLP
+    #Code voor MLP
     transformer = TfidfTransformer(norm='l2', smooth_idf=True, sublinear_tf=False, use_idf=True)
-    X_test, ids = load_data(testdata=True) #TESTDATA WATCH OUT DO NOT USE!!
+    X_test, ids = load_data(testdata=True) #TESTDATA WATCH OUT DO NOT USE FOR OTHER PURPOSES!!
     transformer.fit_transform(np.vstack([X_valid,X_train, X_test]))
     X_train_tf = transformer.transform(X_train)
     X_valid_tf = transformer.transform(X_valid)
+
     mlp = MultilayerPerceptronClassifier(hidden_layer_sizes = (20,10), activation = 'logistic',\
                                              max_iter = 200, alpha = 0.00025, verbose=0, learning_rate='invscaling', learning_rate_init=0.9, power_t=0.8)
     mlp.fit(X_train_tf, y_train)
-    print('RFC 1 LogLoss {score}'.format(score=log_loss(y_valid, mlp.predict_proba(X_valid_tf))))
-    print('RFC 1 accuracy {score}'.format(score=accuracy_score(y_valid, mlp.predict(X_valid_tf))))
+    print('MLP LogLoss {score}'.format(score=log_loss(y_valid, mlp.predict_proba(X_valid_tf))))
+    print('MLP accuracy {score}'.format(score=accuracy_score(y_valid, mlp.predict(X_valid_tf))))
     clfs.append(mlp)
-    '''
 
     # Normal RandomForestClassifier
     clf = RandomForestClassifier(n_jobs=3, n_estimators=200, max_depth=23, random_state=180)

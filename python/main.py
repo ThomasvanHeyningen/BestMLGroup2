@@ -113,6 +113,7 @@ def trainclf():
     print('nn 1 accuracy {score}'.format(score=accuracy_score(y_valid, nn.predict(X_valid))))
     clfs.append(nn)
     '''
+
     #Code voor MLP
     transformer = TfidfTransformer(norm='l2', smooth_idf=True, sublinear_tf=False, use_idf=True)
     X_test, ids = load_data(testdata=True) #TESTDATA WATCH OUT DO NOT USE FOR OTHER PURPOSES!!
@@ -121,7 +122,7 @@ def trainclf():
     X_valid_tf = transformer.transform(X_valid)
 
     mlp = MultilayerPerceptronClassifier(hidden_layer_sizes = (30,15), activation = 'relu',\
-                                             max_iter = 400, alpha = 0.0008, verbose=1, learning_rate='invscaling', learning_rate_init=0.9, power_t=0.8)
+                                             max_iter = 200, alpha = 0.0008, verbose=0, learning_rate='invscaling', learning_rate_init=0.9, power_t=0.8)
     mlp.fit(X_train_tf, y_train)
     print('MLP LogLoss {score}'.format(score=log_loss(y_valid, mlp.predict_proba(X_valid_tf))))
     print('MLP accuracy {score}'.format(score=accuracy_score(y_valid, mlp.predict(X_valid_tf))))

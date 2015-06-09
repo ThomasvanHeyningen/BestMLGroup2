@@ -6,7 +6,7 @@ import pandas as pd
 import datetime as dt
 
 from sklearn.preprocessing import LabelEncoder
-from sklearn.neighbors import KNeighborsClassifier
+from sklearn.neighbors import KNeighborsClassifier, NearestNeighbors
 
 def closepumps(data_dir,traindata,testdata, trainlabels, k=5):
     '''
@@ -20,19 +20,72 @@ def closepumps(data_dir,traindata,testdata, trainlabels, k=5):
     train = np.column_stack((traindata['longitude'], traindata['latitude']))
     test = np.column_stack((testdata['longitude'], testdata['latitude']))
 
-    clf = KNeighborsClassifier(k, weights='distance')
-    print test.shape
-    clf.fit(train, np.array(trainlabels))
-    #trainnew = clf.predict_proba(train)
-    testnew = clf.predict_proba(test)
+    nbrs = NearestNeighbors(n_neighbors=k+1, algorithm='ball_tree').fit(train)
+    distances, indices = nbrs.kneighbors(train)
+    trainfunctionalarray = []
+    trainrepairarray =[]
+    trainbrokenarray =[]
+    for i in xrange(0, len(indices)):
+        functional = 0
+        repair=0
+        broken=0
+        for pump in indices[i][1:]:
+            pumplabel = trainlabels.loc[pump]['status_group']
+            if(pumplabel=='functional needs repair'):
+                repair+=1
+            elif(pumplabel=='functional'):
+                functional+=1
+            else:
+                broken+=1
 
-    #print(trainnew.shape)
-    print(testnew.shape)
+        trainfunctionalarray.append(functional)
+        trainrepairarray.append(repair)
+        trainbrokenarray.append(broken)
 
-    #traindata[feature +'_clean'] = pd.Series(train_text, index=traindata.index)
-    #testdata[feature +'_clean'] = pd.Series(test_text, index=testdata.index)
+    testdistances, testindices = nbrs.kneighbors(test)
+    testfunctionalarray = []
+    testrepairarray =[]
+    testbrokenarray =[]
+
+    for i in xrange(0, len(testindices)):
+        for pump in testindices[i][:-1]:
+            functional = 0
+            repair=0
+            broken=0
+            pumplabel = trainlabels.loc[pump]['status_group']
+            if(pumplabel=='functional needs repair'):
+                repair+=1
+            elif(pumplabel=='functional'):
+                functional+=1
+            else:
+                broken+=1
+
+        testfunctionalarray.append(functional)
+        testrepairarray.append(repair)
+        testbrokenarray.append(broken)
+
+    newtestdata=np.zeros((testrows,1), dtype=int)
+    newtestdata[:, 0]=np.array(testfunctionalarray)
+    store_data(newtestdata, train=False,labels=(str(k) + '_nearest_functional'), one=True)
+
+    newtestdata=np.zeros((testrows,1), dtype=int)
+    newtestdata[:, 0]=np.array(testrepairarray)
+    store_data(newtestdata, train=False,labels=(str(k) + '_nearest_need_repair'), one=True)
+    newtestdata=np.zeros((testrows,1), dtype=int)
+    newtestdata[:, 0]=np.array(testbrokenarray)
+    store_data(newtestdata, train=False,labels=(str(k) + '_nearest_broken'), one=True)
+    newtraindata=np.zeros((trainrows,1), dtype=int)
+    newtraindata[:, 0]=np.array(trainfunctionalarray)
+    store_data(newtraindata, train=True,labels=(str(k) + '_nearest_functional'), one=True)
+    newtraindata=np.zeros((trainrows,1), dtype=int)
+    newtraindata[:, 0]=np.array(trainrepairarray)
+    store_data(newtraindata, train=True,labels=(str(k) + '_nearest_need_repair'), one=True)
+    newtraindata=np.zeros((trainrows,1), dtype=int)
+    newtraindata[:, 0]=np.array(testbrokenarray)
+    store_data(newtraindata, train=True,labels=(str(k) + '_nearest_broken'), one=True)
     #encode_categorical(data_dir,traindata,testdata, ['funder_clean', 'installer_clean'])
     #frequency_feature(data_dir,traindata,testdata, ['funder_clean', 'installer_clean'])
+
 
 def clean_text(data_dir,traindata,testdata):
     names_parameters=['funder', 'installer']
@@ -216,7 +269,7 @@ def main():
     #encode_categorical(data_dir,train,test)
 
     #feature on distance to other pumps:
-    #closepumps(data_dir,train,test, trainlabels, k=35)
+    closepumps(data_dir,train,test, trainlabels, k=5)
 
     #to create the datelabels
     #newtrain = date_features(train)

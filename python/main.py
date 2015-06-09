@@ -102,7 +102,7 @@ def trainclf():
     Returns: the classifier and an encoder (I think this one is out of use.
     '''
     #loading the data from load_data:
-    X_train, X_valid, y_train, y_valid = load_data(train_size=0.8, testdata=False)
+    X_train, X_valid, y_train, y_valid = load_data(train_size=0.999, testdata=False)
 
     # Number of trees, increase this to improve
     clfs = []
@@ -132,7 +132,7 @@ def trainclf():
     clfs.append(mlp)
     '''
     # Normal RandomForestClassifier
-    clf = RandomForestClassifier(n_jobs=3, n_estimators=200, max_depth=23, random_state=180)
+    clf = RandomForestClassifier(n_jobs=3, n_estimators=800, max_depth=23, random_state=180)
 #   AdaBoost with RF, random_state omitted, max_depth & n_estimators lower
 #   clf = AdaBoostClassifier(RandomForestClassifier(n_jobs=3, n_estimators=200, max_depth=15))
     clf.fit(X_train, y_train)
@@ -140,19 +140,19 @@ def trainclf():
     print('RFC 1 accuracy {score}'.format(score=accuracy_score(y_valid, clf.predict(X_valid))))
     clfs.append(clf)
 
-    gbm=GradientBoostingClassifier(n_estimators=50, max_depth=13, max_features=20, min_samples_leaf=3,verbose=1, subsample=0.85, random_state=187)
+    gbm=GradientBoostingClassifier(n_estimators=70, max_depth=13, max_features=20, min_samples_leaf=3,verbose=1, subsample=0.85, random_state=187)
     gbm.fit(X_train, y_train)
     print('GBM LogLoss {score}'.format(score=log_loss(y_valid, gbm.predict_proba(X_valid))))
     print('GBM accuracy {score}'.format(score=accuracy_score(y_valid, gbm.predict(X_valid))))
     clfs.append(gbm)
 
-    gbm2=GradientBoostingClassifier(n_estimators=50, max_depth=15, max_features=20, min_samples_leaf=5,verbose=1, subsample=0.90, random_state=186)
+    gbm2=GradientBoostingClassifier(n_estimators=70, max_depth=15, max_features=20, min_samples_leaf=5,verbose=1, subsample=0.90, random_state=186)
     gbm2.fit(X_train, y_train)
     print('GBM 2 LogLoss {score}'.format(score=log_loss(y_valid, gbm2.predict_proba(X_valid))))
     print('GBM 2 accuracy {score}'.format(score=accuracy_score(y_valid, gbm2.predict(X_valid))))
     clfs.append(gbm2)
 
-    clf2 = RandomForestClassifier(n_jobs=3, n_estimators=200, max_depth=17, random_state=188)
+    clf2 = RandomForestClassifier(n_jobs=3, n_estimators=800, max_depth=29, random_state=188)
     clf2.fit(X_train, y_train)
     print('RFC 2 LogLoss {score}'.format(score=log_loss(y_valid, clf2.predict_proba(X_valid))))
     print('RFC 2 accuracy {score}'.format(score=accuracy_score(y_valid, clf2.predict(X_valid))))
@@ -257,8 +257,8 @@ def main():
     print(" - Start.")
     model, weights = trainclf()
     #weights have to be saved from an 0.8 split to prevent heavy overfitting when run on full data
-    weights= [0.35, 0.20, 0.25, 0.20] # RF, GBM, GBM2, RF2
-    #make_submission(model, weights)
+    weights= [0.30, 0.05, 0.55, 0.10] # RF, GBM, GBM2, RF2
+    make_submission(model, weights)
     print(" - Finished.")
 
 if __name__ == '__main__':

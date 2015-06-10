@@ -67,10 +67,10 @@ def load_data(train_size=0.8, testdata=False):
         ,'source_class_num','waterpoint_type_num','waterpoint_type_group_num'
         ,'month_recorded','age_of_pump','date_recorded_distance_days_20140101'
         ,'basin_freq','region_freq','lga_freq','ward_freq','scheme_name_freq', 'year_recorded'
-        ,'funder_clean_num','installer_clean_num', 'funder_clean_freq','installer_clean_freq'
-        ,'5_nearest_functional','5_nearest_need_repair','5_nearest_broken','10_nearest_functional'
-        ,'10_nearest_need_repair','10_nearest_broken','20_nearest_functional','20_nearest_need_repair'
-        ,'20_nearest_broken','40_nearest_functional','40_nearest_need_repair','40_nearest_broken']
+        ,'funder_clean_num','installer_clean_num', 'funder_clean_freq','installer_clean_freq']
+        #,'5_nearest_functional','5_nearest_need_repair','5_nearest_broken','10_nearest_functional' have to look at this, seems that validation data is leaking through
+        #,'10_nearest_need_repair','10_nearest_broken','20_nearest_functional','20_nearest_need_repair'
+        #,'20_nearest_broken','40_nearest_functional','40_nearest_need_repair','40_nearest_broken']
 
     #removed labels: recorded_by_num, day_recorded, wpt_name_num, subvillage_num, amount_tsh,'quality_group_num','source_type_num'
     #more removed: 'funder_num','installer_num', 'funder_freq','installer_freq'
@@ -102,7 +102,7 @@ def trainclf():
     Returns: the classifier and an encoder (I think this one is out of use.
     '''
     #loading the data from load_data:
-    X_train, X_valid, y_train, y_valid = load_data(train_size=0.999, testdata=False)
+    X_train, X_valid, y_train, y_valid = load_data(train_size=0.8, testdata=False)
 
     # Number of trees, increase this to improve
     clfs = []
@@ -132,7 +132,7 @@ def trainclf():
     clfs.append(mlp)
     '''
     # Normal RandomForestClassifier
-    clf = RandomForestClassifier(n_jobs=3, n_estimators=800, max_depth=23, random_state=180)
+    clf = RandomForestClassifier(n_jobs=3, n_estimators=200, max_depth=23, random_state=180)
 #   AdaBoost with RF, random_state omitted, max_depth & n_estimators lower
 #   clf = AdaBoostClassifier(RandomForestClassifier(n_jobs=3, n_estimators=200, max_depth=15))
     clf.fit(X_train, y_train)
@@ -257,7 +257,8 @@ def main():
     print(" - Start.")
     model, weights = trainclf()
     #weights have to be saved from an 0.8 split to prevent heavy overfitting when run on full data
-    weights= [0.30, 0.05, 0.55, 0.10] # RF, GBM, GBM2, RF2
+    #weights= [0.30, 0.05, 0.55, 0.10] # RF, GBM, GBM2, RF2
+    weights = [1.0]
     make_submission(model, weights)
     print(" - Finished.")
 

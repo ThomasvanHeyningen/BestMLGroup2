@@ -79,7 +79,8 @@ def date_features(data):
     days = []
     age = []
     distance = []
-    for date, construction in zip(data['date_recorded'], data['construction_year']):
+    for date, construction, ix in zip(data['date_recorded'], data['construction_year'], data['id']):
+        print ix
         match=re.match('([0-9]{4})\-([0-9]{2})\-([0-9]{2})',date)
         years.append(match.group(1))
         months.append(match.group(2))

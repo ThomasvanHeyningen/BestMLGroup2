@@ -12,6 +12,8 @@ from sklearn.metrics import classification_report, accuracy_score
 from sklearn.preprocessing import LabelEncoder
 from sklearn.feature_extraction import DictVectorizer
 
+import pseudolabeling as pl
+
 def load_data(train_size=0.8, testdata=False):
     data_dir='../data/'
     train = pd.read_csv(data_dir + 'trainset.csv')
@@ -43,6 +45,7 @@ def load_data(train_size=0.8, testdata=False):
 
     Xtrain=np.hstack((X_train_num, X_extratrain_num))
     Xtest=np.hstack((X_test_num, X_extratest_num))
+    print Xtrain.shape, trainlabels.shape
     trainset = np.column_stack((Xtrain,trainlabels['status_group']))
     print trainset.shape
     X_train, X_valid, Y_train, Y_valid = train_test_split(
@@ -101,12 +104,25 @@ def make_submission(clf, encoder, path='my_submission.csv'):
             f.write('\n')
     print(" -- Wrote submission to file {}.".format(path))
 
+def pseudolabel():
+	clf, encoder = trainrf()
+	X_test, ids = load_data(testdata=True)
+	
+	y_pred = clf.predict(X_test)
+	y_pred = encoder.transform(y_pred)
+	print clf.predict_proba(X_test)
+	y_prob = np.choose(y_pred, np.array(clf.predict_proba(X_test)).T)
+	idc = pl.selectExamples(y_prob)
+	ids    =    ids[idc]
+	y_pred = y_pred[idc]
+	pl.addExamples(y_pred, ids)
 
 def main():
     print(" - Start.")
     model, encoder = trainrf()
     make_submission(model, encoder)
     print(" - Finished.")
+
 if __name__ == '__main__':
     start_time = time.time()
     main()

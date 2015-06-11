@@ -9,9 +9,6 @@ from scipy.stats import mode
 cols = ['num_private', 'latitude', 'population', 'construction_year', 'longitude', 'funder', 'installer', 'subvillage', 'public_meeting', 'scheme_management', 'scheme_name']
 continuous = [True,    True,       True,         True,                True,         False,    False,      False,        False,            False,               False]
 
-def setNaN(df):
-	pass#df[cols] = df[cols].replace(0, np.nan)
-
 def sans(group, sub):
 	try: sub.__iter__
 	except AttributeError: sub = [sub] #	Convert single objects (incl. strings) to a list
@@ -73,7 +70,6 @@ def decode(df, les):
 		df.loc[:,label] = le.inverse_transform(df[label].astype('int32'))
 
 def impute(df, cols):
-	setNaN(df)
 	les = encode(df)
 	for cont, col in zip(continuous, cols):
 		if cont:
@@ -85,11 +81,15 @@ def impute(df, cols):
 if __name__ == "__main__":
 	print "Starting train set"
 	data = pd.read_csv('../data/orig_trainset.csv')
+	date = data['date_recorded']
 	data = data.drop('date_recorded', axis=1)
 	impute(data, cols)
+	data.loc[:, 'date_recorded'] = date
 	data.to_csv('../data/trainset.csv', index=False)
 	print "Starting test set"
 	data = pd.read_csv('../data/orig_testset.csv')
+	date = data['date_recorded']
 	data = data.drop('date_recorded', axis=1)
 	impute(data, cols)
+	data.loc[:, 'date_recorded'] = date
 	data.to_csv('../data/testset.csv', index=False)

@@ -13,6 +13,9 @@ from sklearn.neighbors import KNeighborsClassifier, NearestNeighbors
 # Variables used throughout the file
 data_dir='../data/'
 
+# Variables used throughout the file
+data_dir='../data/'
+
 def frequency_feature(data_dir,traindata,testdata):
     names_parameters=['installer','basin','region','lga','ward','scheme_name']
 
@@ -196,8 +199,7 @@ def date_features(data):
     days = []
     age = []
     distance = []
-    for date, construction, ix in zip(data['date_recorded'], data['construction_year'], data['id']):
-        print ix
+    for date, construction in zip(data['date_recorded'], data['construction_year']):
         match=re.match('([0-9]{4})\-([0-9]{2})\-([0-9]{2})',date)
         years.append(match.group(1))
         months.append(match.group(2))
@@ -255,6 +257,7 @@ def main():
         data_dir='..\\data\\'
     else:
         data_dir=os.path.dirname(os.path.abspath('')) + '/data/'
+
     train = pd.read_csv(data_dir + 'trainset.csv')
     trainlabels = pd.read_csv(data_dir + 'trainlabels.csv')
     test = pd.read_csv(data_dir + 'testset.csv')
@@ -268,10 +271,8 @@ def main():
 
     #to make the categorical features numeric:
     encode_categorical(data_dir,train,test)
-
     #feature on distance to other pumps:
     #closepumps(data_dir,train,test, trainlabels, k=5) # ran it with k=5,10,20 and 40
-
 
     #to create the datelabels
     newtrain = date_features(train)

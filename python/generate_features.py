@@ -1,4 +1,5 @@
-import sys
+import os
+import platform
 import time
 import re
 import numpy as np
@@ -7,12 +8,126 @@ import datetime as dt
 import os
 
 from sklearn.preprocessing import LabelEncoder
+from sklearn.neighbors import KNeighborsClassifier, NearestNeighbors
 
 # Variables used throughout the file
 data_dir='../data/'
 
 def frequency_feature(data_dir,traindata,testdata):
     names_parameters=['installer','basin','region','lga','ward','scheme_name']
+
+def closepumps(data_dir,traindata,testdata, trainlabels, k=5):
+    '''
+    This one does NOT WORK!!!
+    '''
+    names_parameters=['longitude', 'latitude']
+    (testrows, testcolumns)=testdata.shape
+    (trainrows, traincolumns)=traindata.shape
+    traindata= traindata.fillna(-1)
+    testdata = testdata.fillna(-1)
+    train = np.column_stack((traindata['longitude'], traindata['latitude']))
+    test = np.column_stack((testdata['longitude'], testdata['latitude']))
+
+    nbrs = NearestNeighbors(n_neighbors=k+1, algorithm='ball_tree').fit(train)
+    distances, indices = nbrs.kneighbors(train)
+    trainfunctionalarray = []
+    trainrepairarray =[]
+    trainbrokenarray =[]
+    for i in xrange(0, len(indices)):
+        functional = 0
+        repair=0
+        broken=0
+        for pump in indices[i][1:]:
+            pumplabel = trainlabels.loc[pump]['status_group']
+            if(pumplabel=='functional needs repair'):
+                repair+=1
+            elif(pumplabel=='functional'):
+                functional+=1
+            else:
+                broken+=1
+
+        trainfunctionalarray.append(functional)
+        trainrepairarray.append(repair)
+        trainbrokenarray.append(broken)
+
+    testdistances, testindices = nbrs.kneighbors(test)
+    testfunctionalarray = []
+    testrepairarray =[]
+    testbrokenarray =[]
+
+    for i in xrange(0, len(testindices)):
+        functional = 0
+        repair=0
+        broken=0
+        for pump in testindices[i][:-1]:
+            pumplabel = trainlabels.loc[pump]['status_group']
+            if(pumplabel=='functional needs repair'):
+                repair+=1
+            elif(pumplabel=='functional'):
+                functional+=1
+            else:
+                broken+=1
+
+        testfunctionalarray.append(functional)
+        testrepairarray.append(repair)
+        testbrokenarray.append(broken)
+    newtestdata=np.zeros((testrows,1), dtype=int)
+    newtestdata[:, 0]=np.array(testfunctionalarray)
+    store_data(newtestdata, train=False,labels=(str(k) + '_nearest_functional'), one=True)
+    newtestdata=np.zeros((testrows,1), dtype=int)
+    newtestdata[:, 0]=np.array(testrepairarray)
+    store_data(newtestdata, train=False,labels=(str(k) + '_nearest_need_repair'), one=True)
+    newtestdata=np.zeros((testrows,1), dtype=int)
+    newtestdata[:, 0]=np.array(testbrokenarray)
+    store_data(newtestdata, train=False,labels=(str(k) + '_nearest_broken'), one=True)
+    newtraindata=np.zeros((trainrows,1), dtype=int)
+    newtraindata[:, 0]=np.array(trainfunctionalarray)
+    store_data(newtraindata, train=True,labels=(str(k) + '_nearest_functional'), one=True)
+    newtraindata=np.zeros((trainrows,1), dtype=int)
+    newtraindata[:, 0]=np.array(trainrepairarray)
+    store_data(newtraindata, train=True,labels=(str(k) + '_nearest_need_repair'), one=True)
+    newtraindata=np.zeros((trainrows,1), dtype=int)
+    newtraindata[:, 0]=np.array(trainbrokenarray)
+    store_data(newtraindata, train=True,labels=(str(k) + '_nearest_broken'), one=True)
+    #encode_categorical(data_dir,traindata,testdata, ['funder_clean', 'installer_clean'])
+    #frequency_feature(data_dir,traindata,testdata, ['funder_clean', 'installer_clean'])
+
+
+def clean_text(data_dir,traindata,testdata):
+    names_parameters=['funder', 'installer']
+    (testrows, testcolumns)=testdata.shape
+    (trainrows, traincolumns)=traindata.shape
+    traindata= traindata.fillna(-1)
+    testdata = testdata.fillna(-1)
+    for feature in names_parameters:
+        train_text = []
+        test_text = []
+        for text in traindata[feature]:
+            if text is -1:
+                train_text.append(-1)
+            elif text is '0':
+                train_text.append(-1)
+            else:
+                train_text.append(text.lower().replace(" ", ""))
+        for text in testdata[feature]:
+            if text is -1:
+                test_text.append(-1)
+            elif text is '0':
+                test_text.append(-1)
+            else:
+                test_text.append(text.lower().replace(" ", ""))
+
+        traindata[feature +'_clean2'] = pd.Series(train_text, index=traindata.index)
+        testdata[feature +'_clean2'] = pd.Series(test_text, index=testdata.index)
+    encode_categorical(data_dir,traindata,testdata, ['funder_clean2', 'installer_clean2'])
+    frequency_feature(data_dir,traindata,testdata, ['funder_clean2', 'installer_clean2'])
+
+
+def frequency_feature(data_dir,traindata,testdata, parameters=None):
+    if parameters == None:
+        names_parameters=['funder', 'installer','basin','region','lga','ward','scheme_name']
+    else:
+        names_parameters=parameters
     (testrows, testcolumns)=testdata.shape
     (trainrows, traincolumns)=traindata.shape
     traindata=traindata.fillna(-1)
@@ -48,12 +163,14 @@ def frequency_feature(data_dir,traindata,testdata):
         store_data(newtraindata, train=True,labels=(feature +'_freq'), one=True)
 
 
-def encode_categorical(data_dir,traindata,testdata):
-    # EXCLUDED: 'public_meeting', 'permit'
-    names_parameters=['funder','installer','wpt_name','basin','subvillage','region','lga','ward',
-    'recorded_by', 'scheme_management','scheme_name','extraction_type','extraction_type_group','extraction_type_class','management','management_group','payment',
+def encode_categorical(data_dir,traindata,testdata, parameters=None):
+    if parameters == None:
+        names_parameters=['funder','installer','wpt_name','basin','subvillage','region','lga','ward','public_meeting','recorded_by'
+        ,'scheme_management','scheme_name','permit','extraction_type','extraction_type_group','extraction_type_class','management','management_group','payment',
                         'payment_type','water_quality','quality_group','quantity','quantity_group','source','source_type','source_class',
-                        'waterpoint_type','waterpoint_type_group']
+                       'waterpoint_type','waterpoint_type_group']
+    else:
+        names_parameters=parameters
     (testrows, testcolumns)=testdata.shape
     (trainrows, traincolumns)=traindata.shape
     traindata[names_parameters] = traindata[names_parameters].fillna('nan')
@@ -99,29 +216,61 @@ def date_features(data):
     return(newdata)
 
 def store_data(newdata, ids=None, data_dir=data_dir, train=True, labels=(''), one=False):
-    filename = 'extratrainfeatures.csv' if train else 'extratestfeatures.csv'
-    if os.path.exists(data_dir + filename):
-        csvfile = pd.read_csv(data_dir + filename)
+    if platform.platform() == "Windows":
+        data_dir='..\\data\\'
     else:
-        csvfile = pd.DataFrame(data=newdata) # only needed to generate the file the first time
-        #csvfile.set_index('id')
-    index=0
-    if one:
-        csvfile[labels]=newdata[:,0]
+        data_dir=os.path.dirname(os.path.abspath('')) + '/data/'
+
+    if train:
+        if os.path.exists(data_dir + 'extratrainfeatures.csv'):
+            trainfile = pd.read_csv(data_dir + 'extratrainfeatures.csv')
+        else:
+            trainfile=pd.DataFrame(data=ids)  # only needed to generate the file the first time
+            trainfile.set_index('id')
+        index=0
+        if one:
+            trainfile[labels]=newdata[:,0]
+        else:
+            for label in labels:
+                trainfile[label]=newdata[:,index]
+                index=index+1
+        trainfile.to_csv(data_dir + 'extratrainfeatures.csv', index_label='id', index=False)
     else:
-        for label in labels:
-            csvfile[label]=newdata[:,index]
-            index=index+1
-    csvfile.to_csv(data_dir + filename, index_label='id', index=False)
+        testfile = pd.read_csv(data_dir + 'extratestfeatures.csv')
+        testfile = pd.read_csv(data_dir + 'extratestfeatures.csv')
+        #testfile=pd.DataFrame(data=ids) # only needed to generate the file the first time
+        testfile.set_index('id')
+        index=0
+        if one:
+            testfile[labels]=newdata[:,0]
+        else:
+            for label in labels:
+                testfile[label]=newdata[:,index]
+                index=index+1
+        testfile.to_csv(data_dir + 'extratestfeatures.csv', index_label='id', index=False)
 
 def main():
     print(" - Start.")
+    if platform.platform() == "Windows":
+        data_dir='..\\data\\'
+    else:
+        data_dir=os.path.dirname(os.path.abspath('')) + '/data/'
     train = pd.read_csv(data_dir + 'trainset.csv')
     trainlabels = pd.read_csv(data_dir + 'trainlabels.csv')
     test = pd.read_csv(data_dir + 'testset.csv')
+    try:
+        newtrain = pd.read_csv(data_dir + 'nieuwtrain.csv')
+        newtest = pd.read_csv(data_dir + 'nieuwtest.csv')
+    except ValueError:
+        pass
+    #Clean up textual data to prevent duplicates with different names by removing spaces and uppercase
+    #clean_text(data_dir,newtrain,newtest)
 
     #to make the categorical features numeric:
     encode_categorical(data_dir,train,test)
+
+    #feature on distance to other pumps:
+    #closepumps(data_dir,train,test, trainlabels, k=5) # ran it with k=5,10,20 and 40
 
 
     #to create the datelabels

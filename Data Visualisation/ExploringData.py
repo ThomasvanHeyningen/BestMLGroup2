@@ -17,6 +17,8 @@ from operator import add
 TRAIN_X_PATH = "../../train/train_x.csv"
 TRAIN_Y_PATH = "../../train/train_y.csv"
 
+TRAIN_X_GROUPED_PATH = "../../train/train_grouped_named.csv"
+
 CATEGORICALS = ['funder','wpt_name','basin','subvillage','region','lga',
                   'ward','recorded_by','scheme_management','scheme_name',
                   'payment_type','payment','quality_group','management_group',
@@ -57,12 +59,18 @@ def plot_bar_stacked(train, column_name, size=(8.0,8.0)):
     """
     cpy = train.copy()
     # get a list of all the categories 
-    labels = train[column_name].cat.categories    
+    labels = train[column_name].cat.categories
+    
     # seperate the values in the column by their pumps' status and count the
     # frequency of the categories.
     func =      Counter(cpy[column_name][cpy.status_group=='functional'])
     non_func =  Counter(cpy[column_name][cpy.status_group=='non functional'])
     repair =    Counter(cpy[column_name][cpy.status_group=='functional needs repair'])
+    
+    func_values = [func[label] for label in labels]
+    non_func_values = [non_func[label] for label in labels]
+    repair_values = [repair[label] for label in labels] 
+    
     # explicitly set the counts of the categories not in a status group to 0
     # for the correct aligning of bars to work
     for label in labels:
@@ -73,13 +81,17 @@ def plot_bar_stacked(train, column_name, size=(8.0,8.0)):
         if repair[label] is 0:
             repair[label] = 0        
     # list of x-values used to correctly align the bars.
-    left_non_func = map(add, func.values(), repair.values()) 
+    left_non_func = map(add, func_values, repair_values)
+    
+    for label in labels:
+        print label, non_func[label] + func[label] + repair[label]
+    
     # plot the bars
-    pl.barh(np.arange(len(labels)), func.values(),\
+    pl.barh(np.arange(len(labels)), func_values,\
                         color = 'green', align='center')    
-    pl.barh(np.arange(len(labels)), repair.values(),\
-                        color = 'darkorange', align='center', left=func.values())
-    pl.barh(np.arange(len(labels)), non_func.values(),\
+    pl.barh(np.arange(len(labels)), repair_values,\
+                        color = 'darkorange', align='center', left=func_values)
+    pl.barh(np.arange(len(labels)), non_func_values,\
                         color = 'red', align='center', left=left_non_func)
     # set the plot's title                    
     ax = pl.gca()
@@ -87,9 +99,9 @@ def plot_bar_stacked(train, column_name, size=(8.0,8.0)):
         
     pl.ylim([-1,len(labels)])              
     # annotate the bars with their category names
-    text_x = max(func.values())/10    
-    for i in range(0,len(func)):
-        ax.annotate(func.keys()[i], (text_x,i), size='large', verticalalignment='center')
+    text_x = max(func_values)/10    
+    for i in range(0,len(func_values)):
+        ax.annotate(labels[i], (text_x,i), size='large', verticalalignment='center')
     
     fig = pl.figure(num=1)    
     fig.set_size_inches(size[0], size[1])    

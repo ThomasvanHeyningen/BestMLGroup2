@@ -36,7 +36,7 @@ def group_factorize_and_save():
     #data = ld.factorize_data(data)        
     del data["status_group"]  
     
-    data.to_csv(GROUPED_PATH_NAMED)
+    data.to_csv(GROUPED_PATH_NAMED)    
 
 def factorize_and_save():
     """ 1. Loads the original data.

@@ -35,7 +35,10 @@ def group_categories(data, column_name, y_name="status_group"):
             new_cat = group[0]
             for cat in group:                
                 data[column_name].replace(to_replace = cat, value = new_cat, inplace=True)
-                
+               
+    data[column_name] = data[column_name].astype('category')
+    data[column_name] = data[column_name].cat.rename_categories([str(group) for group in best_grouping])
+           
     return data        
     
        
@@ -65,8 +68,7 @@ def find_best_grouping(data, column_name, y_name="status_group", prev_entr=2.0):
     for i in range(1,int(len(cats)/2)+1):
         # Find all combinations of categories of length i
         combs = it.combinations(cats,i)       
-        for comb in combs:
-            print "\rtesting split", c, "(", i, "-", tot-i, "split)",
+        for comb in combs:            
             # divide the categories in the ones that are in this combination
             # and the ones that are not.
             cats_left = np.array(comb)
@@ -81,7 +83,8 @@ def find_best_grouping(data, column_name, y_name="status_group", prev_entr=2.0):
             w_l = len(cats_left) / float(len(cats))
             w_r = len(cats_right) / float(len(cats))            
             
-            entropy_total = w_l * entropy_left + w_r * entropy_right             
+            entropy_total = w_l * entropy_left + w_r * entropy_right
+            print "\rtested split", c, "(", i, "-", tot-i, "split) [", entropy_total, ">", min_entropy, "]",             
             # save the split with the minimal entropy
             if entropy_total < min_entropy:
                 min_entropy = entropy_total
@@ -93,7 +96,8 @@ def find_best_grouping(data, column_name, y_name="status_group", prev_entr=2.0):
                 min_split_right_names = list(cats_right)
             c = c+1
     
-    if min_entropy > prev_entr:
+    if min_entropy > prev_entr:        
+        print "\n", list(cats), "weighted entropy =", prev_entr
         return [list(cats)]
         
     #print "\n[", min_entropy_left, "]", min_split_left_names

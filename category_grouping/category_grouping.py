@@ -28,7 +28,8 @@ def get_distr(data, y_name):
     return probs
 
 def group_categories(data, column_name, y_name="status_group"):
-    best_grouping = find_best_grouping(data, column_name, y_name)   
+    best_grouping = find_best_grouping(data, column_name, y_name)
+    print "\nbest grouping for variable", column_name, "=\n", best_grouping
     for group in best_grouping:
         if isinstance(group, list):
             new_cat = group[0]

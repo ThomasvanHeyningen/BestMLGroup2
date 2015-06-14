@@ -18,6 +18,7 @@ VARS_TO_GROUP = ["source", "source_type", "source_class", "payment",
                  "waterpoint_type_group", "basin"]
                  
 GROUPED_PATH = "../../train/train_grouped.csv"
+GROUPED_PATH_NAMED = "../../train/train_grouped_named.csv"
 FACTORIZED_PATH = "../../train/train_factorized.csv"
 
 def group_factorize_and_save():
@@ -29,13 +30,13 @@ def group_factorize_and_save():
     data = ld.load_data()
     
     for var in VARS_TO_GROUP:
-        print "finding best split of variable \"", var, "\""
+        print "\nfinding best split of variable \"", var, "\""
         data = cg.group_categories(data, var) 
     
-    data = ld.factorize_data(data)        
+    #data = ld.factorize_data(data)        
     del data["status_group"]  
     
-    data.to_csv(GROUPED_PATH)
+    data.to_csv(GROUPED_PATH_NAMED)
 
 def factorize_and_save():
     """ 1. Loads the original data.

@@ -87,7 +87,7 @@ def load_data(train_size=0.8, testdata=False):
     trainset = np.column_stack((Xtrain,trainlabels['status_group']))
     X_train, X_valid, Y_train, Y_valid = train_test_split(
         trainset[:, 0:-1], trainset[:, -1], train_size=train_size
-    , random_state=6)
+    , random_state=12)
 
     if testdata:
         print("Testing set has {0[0]} rows and {0[1]} columns/features".format(test.shape))
@@ -103,7 +103,7 @@ def trainclf():
     Returns: the classifier and an encoder (I think this one is out of use.
     '''
     #loading the data from load_data:
-    X_train, X_valid, y_train, y_valid = load_data(train_size=0.999, testdata=False)
+    X_train, X_valid, y_train, y_valid = load_data(train_size=0.8, testdata=False)
 
     # Number of trees, increase this to improve
     clfs = []
@@ -132,32 +132,44 @@ def trainclf():
     print('MLP accuracy {score}'.format(score=accuracy_score(y_valid, mlp.predict(X_valid_tf))))
     clfs.append(mlp)
     '''
-    # Normal RandomForestClassifier
-    clf = RandomForestClassifier(n_jobs=3, n_estimators=800, max_depth=23, random_state=180)
+
+    '''
+    # ADABOOST
+    clf = RandomForestClassifier(n_jobs=3, n_estimators=200, max_depth=18, random_state=60)
 #   AdaBoost with RF, random_state omitted, max_depth & n_estimators lower
 #   clf = AdaBoostClassifier(RandomForestClassifier(n_jobs=3, n_estimators=200, max_depth=15))
     clf.fit(X_train, y_train)
     print('RFC 1 LogLoss {score}'.format(score=log_loss(y_valid, clf.predict_proba(X_valid))))
     print('RFC 1 accuracy {score}'.format(score=accuracy_score(y_valid, clf.predict(X_valid))))
     clfs.append(clf)
+    '''
 
-    gbm=GradientBoostingClassifier(n_estimators=70, max_depth=13, max_features=20, min_samples_leaf=3,verbose=1, subsample=0.85, random_state=187)
+    # Normal RandomForestClassifier
+    clf = RandomForestClassifier(n_jobs=3, n_estimators=400, max_depth=18, random_state=60)
+    clf.fit(X_train, y_train)
+    print('RFC 1 LogLoss {score}'.format(score=log_loss(y_valid, clf.predict_proba(X_valid))))
+    print('RFC 1 accuracy {score}'.format(score=accuracy_score(y_valid, clf.predict(X_valid))))
+    clfs.append(clf)
+
+
+    gbm=GradientBoostingClassifier(n_estimators=50, max_depth=13, max_features=20, min_samples_leaf=3,verbose=1, subsample=0.85, random_state=187)
     gbm.fit(X_train, y_train)
     print('GBM LogLoss {score}'.format(score=log_loss(y_valid, gbm.predict_proba(X_valid))))
     print('GBM accuracy {score}'.format(score=accuracy_score(y_valid, gbm.predict(X_valid))))
     clfs.append(gbm)
 
-    gbm2=GradientBoostingClassifier(n_estimators=70, max_depth=15, max_features=20, min_samples_leaf=5,verbose=1, subsample=0.90, random_state=186)
+    gbm2=GradientBoostingClassifier(n_estimators=50, max_depth=15, max_features=20, min_samples_leaf=5,verbose=1, subsample=0.90, random_state=186)
     gbm2.fit(X_train, y_train)
     print('GBM 2 LogLoss {score}'.format(score=log_loss(y_valid, gbm2.predict_proba(X_valid))))
     print('GBM 2 accuracy {score}'.format(score=accuracy_score(y_valid, gbm2.predict(X_valid))))
     clfs.append(gbm2)
 
-    clf2 = RandomForestClassifier(n_jobs=3, n_estimators=800, max_depth=29, random_state=188)
+    clf2 = RandomForestClassifier(n_jobs=3, n_estimators=400, max_depth=21, random_state=188)
     clf2.fit(X_train, y_train)
     print('RFC 2 LogLoss {score}'.format(score=log_loss(y_valid, clf2.predict_proba(X_valid))))
     print('RFC 2 accuracy {score}'.format(score=accuracy_score(y_valid, clf2.predict(X_valid))))
     clfs.append(clf2)
+
 
     print(" -- Finished training")
 
@@ -173,7 +185,7 @@ def trainclf():
     cons = ({'type':'eq','fun':lambda w: 1-sum(w)})
     #our weights are bound between 0 and 1
     bounds = [(0,1)]*len(predictions)
-    res = minimize(log_loss_func, starting_values, (predictions, y_valid),  method='SLSQP', bounds=bounds, constraints=cons)
+    res = minimize(accuracy_func, starting_values, (predictions, y_valid),  method='SLSQP', bounds=bounds, constraints=cons)
 
     print('Ensamble Score: {best_score}'.format(best_score=res['fun']))
     print('Best Weights: {weights}'.format(weights=res['x']))
@@ -222,8 +234,20 @@ def accuracy_func(weights, predictions, y_valid):
     final_prediction = 0
     for weight, prediction in zip(weights, predictions):
         final_prediction += weight*prediction
+    max_index=np.argmax(final_prediction, axis=1)
+    y_pred = []
+    #in this loop we translate the predictions to the actual terms:
+    for i in range(len(max_index)):
+        if max_index[i] == 0:
+            y_pred.append('functional')
+        elif max_index[i] == 1:
+            y_pred.append('functional needs repair')
+        elif max_index[i] == 2:
+            y_pred.append('non functional')
+        else:
+            y_pred.append('error')
 
-    return accuracy_score(y_valid, final_prediction)
+    return accuracy_score(y_valid, y_pred)
 
 def make_submission(clfs, weights):
     '''
@@ -232,10 +256,8 @@ def make_submission(clfs, weights):
     also gets a list of weights to use the probabilities proposed by the classifiers with those weights.
     '''
     #path to store the submission to:
-    path = ('..\\submissions\\my_submission_{date}.csv'.format(date=time.strftime("%y%m%d%H%M")))
-
-    #path = ('..\submissions\my_submission_{date}.csv'.format(date=time.strftime("%y%m%d%H%M"))) # alternative path
-
+    path = ('..\submissions\my_submission_{date}.csv'.format(date=time.strftime("%y%m%d%H%M"))) # alternative path
+    path = ('githubsubmission.csv')
     X_test, ids = load_data(testdata=True) # load the data
     y_prob_tot = 0
 
@@ -281,7 +303,7 @@ def main():
     print(" - Start.")
     model, weights = trainclf() #training
     #weights have to be saved from an 0.8 split to prevent heavy overfitting when run on full data
-    weights= [0.30, 0.15, 0.40, 0.15] # RF, GBM, GBM2, RF2
+    weights= [0.21901258,  0.1913049,   0.30512143,  0.28456109] # RF, GBM, GBM2, RF2
     make_submission(model, weights) #testing
     print(" - Finished.")
 

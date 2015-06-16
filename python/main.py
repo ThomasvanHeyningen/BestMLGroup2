@@ -204,7 +204,10 @@ def trainclf():
     return clfs, res['x']
 
 def log_loss_func(weights, predictions, y_valid):
-    ''' scipy minimize will pass the weights as a numpy array '''
+    '''
+    Function to optimize the weights based on log_loss. Which is not ideal because we want to optimize accuracy.
+    It does however provide some functionality, and different from the accuracy function this one works.
+    '''
     final_prediction = 0
     for weight, prediction in zip(weights, predictions):
             final_prediction += weight*prediction
@@ -212,7 +215,10 @@ def log_loss_func(weights, predictions, y_valid):
     return log_loss(y_valid, final_prediction)
 
 def accuracy_func(weights, predictions, y_valid):
-    ''' scipy minimize will pass the weights as a numpy array '''
+    '''
+    Function to optimize the weights based on accuracy.
+    We sadly did not get this function to work. So this still is a "work in progress".
+    '''
     final_prediction = 0
     for weight, prediction in zip(weights, predictions):
         final_prediction += weight*prediction
@@ -222,19 +228,28 @@ def accuracy_func(weights, predictions, y_valid):
 def make_submission(clfs, weights):
     '''
     Code to make a submission:
-    Gets a classifier and uses this to classify the test-set which is loaded using load_data
+    Gets a list of classifiers and uses these to classify the test-set which is loaded using load_data
+    also gets a list of weights to use the probabilities proposed by the classifiers with those weights.
     '''
+    #path to store the submission to:
     path = ('..\\submissions\\my_submission_{date}.csv'.format(date=time.strftime("%y%m%d%H%M")))
 
-    X_test, ids = load_data(testdata=True)
+    #path = ('..\submissions\my_submission_{date}.csv'.format(date=time.strftime("%y%m%d%H%M"))) # alternative path
+
+    X_test, ids = load_data(testdata=True) # load the data
     y_prob_tot = 0
-    
-    for i in range(len(clfs)):
-        y_prob = clfs[i].predict_proba(X_test)
-        y_prob_tot += y_prob*weights[i]
-    y_prob_tot=np.array(y_prob_tot)
+
+    #We weight the probabilities provided by the different classifiers:
+    for i in range(len(clfs)): # for all classifiers
+        y_prob = clfs[i].predict_proba(X_test) # predict for the test set
+        y_prob_tot += y_prob*weights[i] # and weigh
+    y_prob_tot=np.array(y_prob_tot) # make the prob matrix an numpy matrix
+    #pick the prediction (out of funct, non funct, need repair) with the highest probability:
+    # note that the probabilities don't add up to one but to the number of classifiers,
+    # this is however not a problem as we are only interested in the maximum value.
     max_index=np.argmax(y_prob_tot, axis=1)
     y_pred = []
+    #in this loop we translate the predictions to the actual terms:
     for i in range(len(max_index)):
         if max_index[i] == 0:
             y_pred.append('functional')
@@ -244,7 +259,7 @@ def make_submission(clfs, weights):
             y_pred.append('non functional')
         else:
             y_pred.append('error')
-
+    #Open a file and write the data (with some formatting) to the location in path
     with open(path, 'w') as f:
         f.write('id,status_group\n')
         for id, pred in zip(ids, y_pred):
@@ -255,12 +270,19 @@ def make_submission(clfs, weights):
     print(" -- Wrote submission to file {}.".format(path))
 
 def main():
-    ''
+    '''
+    The main function of the program:
+    Here we first call the training, and on some occasions we also call the submission maker.
+    Weights have to be set manually as it is most likely that these were derived from a 0.8 split train validation run.
+    When we run with all the training data (we actually use a 0.999 split but that is not a significant difference)
+    the weights can't be derived from that run (guaranteed overfitting), the weights from the 0.8 split however
+    are perfectly suitable.
+    '''
     print(" - Start.")
-    model, weights = trainclf()
+    model, weights = trainclf() #training
     #weights have to be saved from an 0.8 split to prevent heavy overfitting when run on full data
     weights= [0.30, 0.15, 0.40, 0.15] # RF, GBM, GBM2, RF2
-    make_submission(model, weights)
+    make_submission(model, weights) #testing
     print(" - Finished.")
 
 if __name__ == '__main__':

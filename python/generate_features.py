@@ -86,31 +86,46 @@ def closepumps(data_dir,traindata,testdata, trainlabels, k=5):
 
 
 def clean_text(data_dir,traindata,testdata):
-    names_parameters=['funder', 'installer']
-    (testrows, testcolumns)=testdata.shape
-    (trainrows, traincolumns)=traindata.shape
-    traindata= traindata.fillna(-1)
+    '''
+    After cleaning the funder and installer functions by hand (over 30% was cleaned) this function is used to derive some of the features.
+    The data given is:
+    data_dir: not used
+    traindata: the new traindata file where funder and installer data are cleaned
+    testdata: the new testdata file where funder and installer data are cleaned
+    after reading all the data into data frames the function calls the encode categorical and the frequency feature
+    encode categorical encodes the textual values to numeric values (unordered).
+    frequency feature calculates the frequency of each data point.
+    '''
+    names_parameters=['funder', 'installer'] # the parameters to work with
+    (testrows, testcolumns)=testdata.shape # data size of train set
+    (trainrows, traincolumns)=traindata.shape # data size of test set
+
+    traindata= traindata.fillna(-1) # fill all empty values with -1 (easy fix for trouble later on)
     testdata = testdata.fillna(-1)
     for feature in names_parameters:
         train_text = []
         test_text = []
+        #for each value in traindata we do some automatic cleany (mostly redundant and from an earlier automatic quick fix):
         for text in traindata[feature]:
-            if text is -1:
+            if text is -1: #all missing values as -1
                 train_text.append(-1)
-            elif text is '0':
+            elif text is '0': #all missing values as -1: 0's likely represent a missing value for these features.
                 train_text.append(-1)
             else:
-                train_text.append(text.lower().replace(" ", ""))
+                train_text.append(text.lower().replace(" ", "")) #lowercase and remove spaces for quick unification of data.
+        #for each value in testdata we do some the same cleanup:
         for text in testdata[feature]:
             if text is -1:
-                test_text.append(-1)
+                test_text.append(-1)#all missing values as -1
             elif text is '0':
-                test_text.append(-1)
+                test_text.append(-1) #all missing values as -1: 0's likely represent a missing value for these features.
             else:
-                test_text.append(text.lower().replace(" ", ""))
-
+                test_text.append(text.lower().replace(" ", "")) #lowercase and remove spaces for quick unification of data.
+        #we add the new features to the training and test data:
         traindata[feature +'_clean2'] = pd.Series(train_text, index=traindata.index)
         testdata[feature +'_clean2'] = pd.Series(test_text, index=testdata.index)
+    #We instruct the categorical and frequency data to encode the newly created clean data
+    # (those functions will also store it into the extratrainfeatures.csv file):
     encode_categorical(data_dir,traindata,testdata, ['funder_clean2', 'installer_clean2'])
     frequency_feature(data_dir,traindata,testdata, ['funder_clean2', 'installer_clean2'])
 
@@ -265,7 +280,7 @@ def main():
         newtest = pd.read_csv(data_dir + 'nieuwtest.csv')
 
     #Clean up textual data to prevent duplicates with different names by removing spaces and uppercase
-    #clean_text(data_dir,newtrain,newtest)
+    clean_text(data_dir,newtrain,newtest)
 
     #to make the categorical features numeric:
     #encode_categorical(data_dir,train,test)

@@ -103,7 +103,7 @@ def trainclf():
     Returns: the classifier and an encoder (I think this one is out of use.
     '''
     #loading the data from load_data:
-    X_train, X_valid, y_train, y_valid = load_data(train_size=0.8, testdata=False)
+    X_train, X_valid, y_train, y_valid = load_data(train_size=0.9999, testdata=False)
 
     # Number of trees, increase this to improve
     clfs = []

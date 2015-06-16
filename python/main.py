@@ -185,7 +185,7 @@ def trainclf():
     cons = ({'type':'eq','fun':lambda w: 1-sum(w)})
     #our weights are bound between 0 and 1
     bounds = [(0,1)]*len(predictions)
-    res = minimize(accuracy_func, starting_values, (predictions, y_valid),  method='SLSQP', bounds=bounds, constraints=cons)
+    res = minimize(log_loss_func, starting_values, (predictions, y_valid),  method='SLSQP', bounds=bounds, constraints=cons)
 
     print('Ensamble Score: {best_score}'.format(best_score=res['fun']))
     print('Best Weights: {weights}'.format(weights=res['x']))
@@ -218,7 +218,7 @@ def trainclf():
 def log_loss_func(weights, predictions, y_valid):
     '''
     Function to optimize the weights based on log_loss. Which is not ideal because we want to optimize accuracy.
-    It does however provide some functionality, and different from the accuracy function this one works.
+    It does however provide some functionality, and the accuracy function still has some issues.
     '''
     final_prediction = 0
     for weight, prediction in zip(weights, predictions):
@@ -229,7 +229,6 @@ def log_loss_func(weights, predictions, y_valid):
 def accuracy_func(weights, predictions, y_valid):
     '''
     Function to optimize the weights based on accuracy.
-    We sadly did not get this function to work. So this still is a "work in progress".
     '''
     final_prediction = 0
     for weight, prediction in zip(weights, predictions):

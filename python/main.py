@@ -255,15 +255,20 @@ def make_submission(clfs, weights):
     print(" -- Wrote submission to file {}.".format(path))
 
 def main():
+    ''
     print(" - Start.")
     model, weights = trainclf()
     #weights have to be saved from an 0.8 split to prevent heavy overfitting when run on full data
     weights= [0.30, 0.15, 0.40, 0.15] # RF, GBM, GBM2, RF2
-    #make_submission(model, weights)
+    make_submission(model, weights)
     print(" - Finished.")
 
 if __name__ == '__main__':
+    '''
+    The main function here everything starts.
+    Actually we only start (and close and print) a timer for the run time of the total program.
+    Besides calling yet another (more real) main function.
+    '''
     start_time = time.time()
     main()
-    #statist()
     print("--- execution took %s seconds ---" % (time.time() - start_time))

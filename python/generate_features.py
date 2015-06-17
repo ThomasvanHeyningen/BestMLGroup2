@@ -92,8 +92,8 @@ def closepumps(data_dir,traindata,testdata, trainlabels, k=5):
     newtraindata=np.zeros((trainrows,1), dtype=int)
     newtraindata[:, 0]=np.array(trainbrokenarray)
     store_data(newtraindata, train=True,labels=(str(k) + '_nearest_broken'), one=True)
-    encode_categorical(data_dir,traindata,testdata, ['funder_clean', 'installer_clean'])
-    frequency_feature(data_dir,traindata,testdata, ['funder_clean', 'installer_clean'])
+    #encode_categorical(data_dir,traindata,testdata, ['funder_clean', 'installer_clean'])
+    #frequency_feature(data_dir,traindata,testdata, ['funder_clean', 'installer_clean'])
 
 
 def clean_text(data_dir,traindata,testdata):
@@ -226,7 +226,7 @@ def store_data(newdata, ids=None, data_dir=data_dir, train=True, labels=(''), on
     if train:
         if os.path.exists(data_dir + 'extratrainfeatures.csv'):
             trainfile = pd.read_csv(data_dir + 'extratrainfeatures.csv')
-            #trainfile.set_index('id')
+            trainfile.set_index('id')
         else:
             trainfile=pd.DataFrame(data=ids)  # only needed to generate the file the first time
         index=0
@@ -241,7 +241,7 @@ def store_data(newdata, ids=None, data_dir=data_dir, train=True, labels=(''), on
         if os.path.exists(data_dir + 'extratestfeatures.csv'):
             testfile = pd.read_csv(data_dir + 'extratestfeatures.csv')
             testfile = pd.read_csv(data_dir + 'extratestfeatures.csv')
-            #testfile.set_index('id')
+            testfile.set_index('id')
         else:
             testfile=pd.DataFrame(data=ids) # only needed to generate the file the first time
         index=0

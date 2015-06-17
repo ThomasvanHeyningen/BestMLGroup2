@@ -4,3 +4,6 @@
 *.pyc
 *.csv
 python/my_submission.csv
+
+data/*
+data/

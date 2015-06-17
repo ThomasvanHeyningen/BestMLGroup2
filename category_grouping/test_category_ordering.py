@@ -15,10 +15,13 @@ import sklearn.ensemble as ensm
 import sklearn.metrics as met
 
 VARS_TO_ORDER = ["source", "source_type", "source_class", "payment", 
-                 "payment_type", "quality_group", "quantity", "waterpoint_type",
+                 "payment_type", "quality_group", "quantity", "quantity_group",
+                 "waterpoint_type", "management", "management_group",
+                 "extraction_type_class",
                  "waterpoint_type_group", "basin"]
                  
 ORDERED_PATH = "../../train/train_ordered.csv"
+ORDERED_PATH_TEST = "../../train/test_ordered.csv"
 FACTORIZED_PATH = "../../train/train_factorized.csv"
 
 def order_factorize_and_save():
@@ -28,16 +31,20 @@ def order_factorize_and_save():
         4. Saves it as a CSV-file.
     """
     data = ld.load_data()
+    data_test_set = ld.load_data_test()
     
     for var in VARS_TO_ORDER:
         print "\nfinding best ordering of variable \"", var, "\""
         new_order = co.find_best_ordering(data, var)
         data[var].cat.categories = new_order
+        data_test_set[var].cat.categories = new_order
     
-    data = ld.factorize_data(data)        
+    data = ld.factorize_data(data)
+    data_test_set = ld.factorize_data_testset(data_test_set)        
     del data["status_group"]  
     
     data.to_csv(ORDERED_PATH)
+    data_test_set.to_csv(ORDERED_PATH_TEST)
 
 def factorize_and_save():
     """ 1. Loads the original data.

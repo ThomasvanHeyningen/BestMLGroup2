@@ -1,5 +1,12 @@
 .idea
+.idea/*
 
 *.pyc
 *.csv
 python/my_submission.csv
+
+data/*
+data/
+
+submissions
+submission/*

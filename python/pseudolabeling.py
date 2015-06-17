@@ -3,12 +3,39 @@
 	prediction confidence and a threshold are given.
 """
 import pandas as pd
+import numpy as np
 import main
 
-def selectExamples(confidence, threshold=0.95):
-	""" Expects examples as a df, confidence as np.ndarray. """
+def selectExamples(confidence, labels, threshold=0.95, class_ratios=None):
+	""" Expects labels, confidence as np.ndarray. """
 	selection = confidence >= threshold
+	if class_ratios is not None:
+		subselection = preserve_ratios(labels[selection], class_ratios)
+	
+	j = 0
+	for i,b in enumerate(selection):
+		if b:
+			selection[i] = subselection[j]
+			j+=1
 	return selection
+
+def preserve_ratios(classes, true_ratios):
+	curr_ratios = np.array([np.sum(classes == i) for i in range(np.max(classes))])
+	curr_ratios /= len(classes)
+	r = np.array(true_ratios) / curr_ratios  # Meta-ratio: ratio between ratios
+	r = np.min(r)
+	curr_ratios = curr_ratios * r
+	max_counts = curr_ratios * len(classes)
+	counts = np.zeros_likes(max_counts)
+	preserved = []
+	for c in classes:
+		if counts[c] <= max_counts:
+			preserved.append(True)
+			counts[c] += 1
+		else:
+			preserved.append(False)
+	return preserved
+			
 
 def addExamples(labels, ids):
 	data_dir = '../data/'
@@ -22,9 +49,12 @@ def addExamples(labels, ids):
 	print "Train before ", train.shape
 	# Add examples to train set
 	examples = test[ids, :]
+	print "EXAMPLES: ", ids, examples
 	#SOMEHOW EXAMPLES ARE NOT ADDED TO TRAIN BUT ARE EMPTY
 	1/0
+	print "PRETRAIN ", train
 	train = pd.concat([train, examples])
+	print "POSTTRAIN ", train
 	train.to_csv(data_dir + trainname, index_label='id', index=False)
 	print "Examples ", examples.shape
 	

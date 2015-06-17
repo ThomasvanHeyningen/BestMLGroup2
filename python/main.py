@@ -144,7 +144,7 @@ def trainclf():
     print('RFC 1 LogLoss {score}'.format(score=log_loss(y_valid, clf.predict_proba(X_valid))))
     print('RFC 1 accuracy {score}'.format(score=accuracy_score(y_valid, clf.predict(X_valid))))
     clfs.append(clf)
-
+    """
     gbm=GradientBoostingClassifier(n_estimators=70, max_depth=13, max_features=20, min_samples_leaf=3,verbose=1, subsample=0.85, random_state=187)
     gbm.fit(X_train, y_train)
     print('GBM LogLoss {score}'.format(score=log_loss(y_valid, gbm.predict_proba(X_valid))))
@@ -162,7 +162,7 @@ def trainclf():
     print('RFC 2 LogLoss {score}'.format(score=log_loss(y_valid, clf2.predict_proba(X_valid))))
     print('RFC 2 accuracy {score}'.format(score=accuracy_score(y_valid, clf2.predict(X_valid))))
     clfs.append(clf2)
-
+    """
     print(" -- Finished training")
 
     predictions = []
@@ -259,17 +259,17 @@ def make_submission(clfs, weights):
     print(" -- Wrote submission to file {}.".format(path))
 
 def pseudolabel():
-	clf, encoder = trainrf()
-	X_test, ids = load_data(testdata=True)
-	
-	y_pred = clf.predict(X_test)
-	y_pred = encoder.transform(y_pred)
-	print clf.predict_proba(X_test)
-	y_prob = np.choose(y_pred, np.array(clf.predict_proba(X_test)).T)
-	idc = pl.selectExamples(y_prob)
-	ids    =    ids[idc]
-	y_pred = y_pred[idc]
-	pl.addExamples(y_pred, ids)
+    clf, encoder = trainclf()
+    X_test, ids = load_data(testdata=True)
+    
+    y_pred = clf.predict(X_test)
+    y_pred = encoder.transform(y_pred)
+    print clf.predict_proba(X_test)
+    y_prob = np.choose(y_pred, np.array(clf.predict_proba(X_test)).T)
+    idc = pl.selectExamples(y_prob)
+    ids    =    ids[idc]
+    y_pred = y_pred[idc]
+    pl.addExamples(y_pred, ids)
 
 def main():
     print(" - Start.")

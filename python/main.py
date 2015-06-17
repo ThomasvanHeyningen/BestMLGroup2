@@ -100,7 +100,8 @@ def trainclf():
     '''
     Code to train a classifier. Gets the data from load_data.
 
-    Returns: the classifier and an encoder (I think this one is out of use.
+    Returns: the classifiers and ensemble weights
+
     '''
     #loading the data from load_data:
     X_train, X_valid, y_train, y_valid = load_data(train_size=0.999, testdata=False)
@@ -117,8 +118,8 @@ def trainclf():
     print('nn 1 accuracy {score}'.format(score=accuracy_score(y_valid, nn.predict(X_valid))))
     clfs.append(nn)
     '''
-    ''' Voor Senna om mee te klooien, maar doet voorlopig nog weinig
-    #Code voor MLP
+    '''
+    #Code voor MLP, quite low performance with current settings.
     transformer = TfidfTransformer(norm='l2', smooth_idf=True, sublinear_tf=False, use_idf=True)
     X_test, ids = load_data(testdata=True) #TESTDATA WATCH OUT DO NOT USE FOR OTHER PURPOSES!!
     transformer.fit_transform(np.vstack([X_valid,X_train, X_test]))

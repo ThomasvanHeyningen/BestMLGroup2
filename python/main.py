@@ -35,19 +35,18 @@ def load_data(train_size=0.8, testdata=False):
     try:
         # Unix
         data_dir=os.path.dirname(os.path.abspath('')) + '/data/'
-        train = pd.read_csv(data_dir + 'trainset.csv')
+        train = pd.read_csv(data_dir + 'Training_set_with_temperature.csv')
         trainlabels = pd.read_csv(data_dir + 'trainlabels.csv')
-        test = pd.read_csv(data_dir + 'testset.csv')
+        test = pd.read_csv(data_dir + 'Test_set_with_temperature.csv')
         extratrain=pd.read_csv(data_dir + 'extratrainfeatures.csv')
         extratest=pd.read_csv(data_dir + 'extratestfeatures.csv')
     except IOError:
         # Windows
         data_dir='..\\data\\'
 
-        print (data_dir + 'trainset.csv')
-        train = pd.read_csv(data_dir + 'trainset.csv')
+        train = pd.read_csv(data_dir + 'Training_set_with_temperature.csv')
         trainlabels = pd.read_csv(data_dir + 'trainlabels.csv')
-        test = pd.read_csv(data_dir + 'testset.csv')
+        test = pd.read_csv(data_dir + 'Test_set_with_temperature.csv')
         extratrain=pd.read_csv(data_dir + 'extratrainfeatures.csv')
         extratest=pd.read_csv(data_dir + 'extratestfeatures.csv')
 
@@ -57,7 +56,10 @@ def load_data(train_size=0.8, testdata=False):
 
     #The selection of the labels/features to use for the training/testing.
     #If a label is removed please add it to the removed labels.
-    numerical_label = ['gps_height','longitude','latitude','region_code','district_code','population','construction_year']
+    numerical_label = ['gps_height','longitude','latitude','region_code','district_code','population','construction_year'
+        ,'Winter average','Spring average','Summer average','Autumn average','Average']\
+    #, 'Month 1','Month 2','Month 3'
+    #,'Month 4','Month 5','Month 6','Month 7','Month 8','Month 9','Month 10','Month 11' ,'Month 12']
     #removed labels: num_private
 
     extra_label=['basin_num','region_num','lga_num','ward_num'
@@ -151,7 +153,6 @@ def trainclf():
     print('RFC 1 LogLoss {score}'.format(score=log_loss(y_valid, clf.predict_proba(X_valid))))
     print('RFC 1 accuracy {score}'.format(score=accuracy_score(y_valid, clf.predict(X_valid))))
     clfs.append(clf)
-
 
     gbm=GradientBoostingClassifier(n_estimators=50, max_depth=13, max_features=20, min_samples_leaf=3,verbose=1, subsample=0.85, random_state=187)
     gbm.fit(X_train, y_train)
@@ -257,7 +258,7 @@ def make_submission(clfs, weights):
     '''
     #path to store the submission to:
     path = ('..\submissions\my_submission_{date}.csv'.format(date=time.strftime("%y%m%d%H%M"))) # alternative path
-    path = ('githubsubmission.csv')
+    #path = ('githubsubmission.csv') # quick hack for some git issues on remote Unix system.
     X_test, ids = load_data(testdata=True) # load the data
     y_prob_tot = 0
 

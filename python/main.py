@@ -257,8 +257,8 @@ def make_submission(clfs, weights):
     also gets a list of weights to use the probabilities proposed by the classifiers with those weights.
     '''
     #path to store the submission to:
-    path = ('..\submissions\my_submission_{date}.csv'.format(date=time.strftime("%y%m%d%H%M"))) # alternative path
-    #path = ('githubsubmission.csv') # quick hack for some git issues on remote Unix system.
+    #path = ('..\submissions\my_submission_{date}.csv'.format(date=time.strftime("%y%m%d%H%M"))) # alternative path
+    path = ('githubsubmission.csv') # quick hack for some git issues on remote Unix system.
     X_test, ids = load_data(testdata=True) # load the data
     y_prob_tot = 0
 

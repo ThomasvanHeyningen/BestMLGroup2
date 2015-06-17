@@ -43,25 +43,27 @@ def load_data(train_size=0.8, testdata=False):
     try:
         # Unix
         data_dir=os.path.dirname(os.path.abspath('')) + '/data/'
-        train = pd.read_csv(data_dir + 'trainset.csv')
+        train = pd.read_csv(data_dir + 'Training_set_with_temperature.csv')
         trainlabels = pd.read_csv(data_dir + 'trainlabels.csv')
-        test = pd.read_csv(data_dir + 'testset.csv')
+        test = pd.read_csv(data_dir + 'Test_set_with_temperature.csv')
         extratrain=pd.read_csv(data_dir + 'extratrainfeatures.csv')
         extratest=pd.read_csv(data_dir + 'extratestfeatures.csv')
     except IOError:
         # Windows
         data_dir='..\\data\\'
 
-        print (data_dir + 'trainset.csv')
-        train = pd.read_csv(data_dir + 'trainset.csv')
+        train = pd.read_csv(data_dir + 'Training_set_with_temperature.csv')
         trainlabels = pd.read_csv(data_dir + 'trainlabels.csv')
-        test = pd.read_csv(data_dir + 'testset.csv')
+        test = pd.read_csv(data_dir + 'Test_set_with_temperature.csv')
         extratrain=pd.read_csv(data_dir + 'extratrainfeatures.csv')
         extratest=pd.read_csv(data_dir + 'extratestfeatures.csv')
 
     #The selection of the labels/features to use for the training/testing.
     #If a label is removed please add it to the removed labels.
-    numerical_label = ['gps_height','longitude','latitude','region_code','district_code','population','construction_year']
+    numerical_label = ['gps_height','longitude','latitude','region_code','district_code','population','construction_year'
+        ,'Winter average','Spring average','Summer average','Autumn average','Average']\
+    #, 'Month 1','Month 2','Month 3'
+    #,'Month 4','Month 5','Month 6','Month 7','Month 8','Month 9','Month 10','Month 11' ,'Month 12']
     #removed labels: num_private
 
     extra_label=['basin_num','region_num','lga_num','ward_num'
@@ -71,13 +73,14 @@ def load_data(train_size=0.8, testdata=False):
         ,'source_class_num','waterpoint_type_num','waterpoint_type_group_num'
         ,'month_recorded','age_of_pump','date_recorded_distance_days_20140101'
         ,'basin_freq','region_freq','lga_freq','ward_freq','scheme_name_freq', 'year_recorded'
-        ,'funder_clean_num','installer_clean_num', 'funder_clean_freq','installer_clean_freq']
+        ,'funder_clean2_num','installer_clean2_num', 'funder_clean2_freq','installer_clean2_freq']
         #,'5_nearest_functional','5_nearest_need_repair','5_nearest_broken','10_nearest_functional' have to look at this, seems that validation data is leaking through
         #,'10_nearest_need_repair','10_nearest_broken','20_nearest_functional','20_nearest_need_repair'
         #,'20_nearest_broken','40_nearest_functional','40_nearest_need_repair','40_nearest_broken']
 
     #removed labels: recorded_by_num, day_recorded, wpt_name_num, subvillage_num, amount_tsh,'quality_group_num','source_type_num'
     #more removed: 'funder_num','installer_num', 'funder_freq','installer_freq'
+    #after hand cleaning: 'funder_clean_num','installer_clean_num', 'funder_clean_freq','installer_clean_freq'
 
     #Processing the labels into the train and test sets.
     X_train_num=train[numerical_label]
@@ -91,7 +94,7 @@ def load_data(train_size=0.8, testdata=False):
     trainset = np.column_stack((Xtrain,trainlabels['status_group']))
     X_train, X_valid, Y_train, Y_valid = train_test_split(
         trainset[:, 0:-1], trainset[:, -1], train_size=train_size
-    , random_state=6)
+    , random_state=12)
 
     if testdata:
         print("Testing set has {0[0]} rows and {0[1]} columns/features".format(test.shape))
@@ -104,10 +107,11 @@ def trainclf():
     '''
     Code to train a classifier. Gets the data from load_data.
 
-    Returns: the classifier and an encoder (I think this one is out of use.
+    Returns: the classifiers and ensemble weights
+
     '''
     #loading the data from load_data:
-    X_train, X_valid, y_train, y_valid = load_data(train_size=0.8, testdata=False)
+    X_train, X_valid, y_train, y_valid = load_data(train_size=0.999, testdata=False)
 
     # Number of trees, increase this to improve
     clfs = []
@@ -121,8 +125,8 @@ def trainclf():
     print('nn 1 accuracy {score}'.format(score=accuracy_score(y_valid, nn.predict(X_valid))))
     clfs.append(nn)
     '''
-    ''' Voor Senna om mee te klooien, maar doet voorlopig nog weinig
-    #Code voor MLP
+    '''
+    #Code voor MLP, quite low performance with current settings.
     transformer = TfidfTransformer(norm='l2', smooth_idf=True, sublinear_tf=False, use_idf=True)
     X_test, ids = load_data(testdata=True) #TESTDATA WATCH OUT DO NOT USE FOR OTHER PURPOSES!!
     transformer.fit_transform(np.vstack([X_valid,X_train, X_test]))
@@ -136,33 +140,45 @@ def trainclf():
     print('MLP accuracy {score}'.format(score=accuracy_score(y_valid, mlp.predict(X_valid_tf))))
     clfs.append(mlp)
     '''
-    # Normal RandomForestClassifier
-    clf = RandomForestClassifier(n_jobs=3, n_estimators=200, max_depth=23, random_state=180)
+
+    '''
+    # ADABOOST
+    clf = RandomForestClassifier(n_jobs=3, n_estimators=200, max_depth=18, random_state=60)
 #   AdaBoost with RF, random_state omitted, max_depth & n_estimators lower
 #   clf = AdaBoostClassifier(RandomForestClassifier(n_jobs=3, n_estimators=200, max_depth=15))
     clf.fit(X_train, y_train)
     print('RFC 1 LogLoss {score}'.format(score=log_loss(y_valid, clf.predict_proba(X_valid))))
     print('RFC 1 accuracy {score}'.format(score=accuracy_score(y_valid, clf.predict(X_valid))))
     clfs.append(clf)
-    """
     gbm=GradientBoostingClassifier(n_estimators=70, max_depth=13, max_features=20, min_samples_leaf=3,verbose=1, subsample=0.85, random_state=187)
+    '''
+
+    # Normal RandomForestClassifier
+    clf = RandomForestClassifier(n_jobs=3, n_estimators=400, max_depth=18, random_state=60)
+    clf.fit(X_train, y_train)
+    print('RFC 1 LogLoss {score}'.format(score=log_loss(y_valid, clf.predict_proba(X_valid))))
+    print('RFC 1 accuracy {score}'.format(score=accuracy_score(y_valid, clf.predict(X_valid))))
+    clfs.append(clf)
+
+    gbm=GradientBoostingClassifier(n_estimators=50, max_depth=13, max_features=20, min_samples_leaf=3,verbose=1, subsample=0.85, random_state=187)
     gbm.fit(X_train, y_train)
     print('GBM LogLoss {score}'.format(score=log_loss(y_valid, gbm.predict_proba(X_valid))))
     print('GBM accuracy {score}'.format(score=accuracy_score(y_valid, gbm.predict(X_valid))))
     clfs.append(gbm)
 
-    gbm2=GradientBoostingClassifier(n_estimators=70, max_depth=15, max_features=20, min_samples_leaf=5,verbose=1, subsample=0.90, random_state=186)
+    gbm2=GradientBoostingClassifier(n_estimators=50, max_depth=15, max_features=20, min_samples_leaf=5,verbose=1, subsample=0.90, random_state=186)
     gbm2.fit(X_train, y_train)
     print('GBM 2 LogLoss {score}'.format(score=log_loss(y_valid, gbm2.predict_proba(X_valid))))
     print('GBM 2 accuracy {score}'.format(score=accuracy_score(y_valid, gbm2.predict(X_valid))))
     clfs.append(gbm2)
 
-    clf2 = RandomForestClassifier(n_jobs=3, n_estimators=800, max_depth=29, random_state=188)
+    clf2 = RandomForestClassifier(n_jobs=3, n_estimators=400, max_depth=21, random_state=188)
     clf2.fit(X_train, y_train)
     print('RFC 2 LogLoss {score}'.format(score=log_loss(y_valid, clf2.predict_proba(X_valid))))
     print('RFC 2 accuracy {score}'.format(score=accuracy_score(y_valid, clf2.predict(X_valid))))
     clfs.append(clf2)
-    """
+
+
     print(" -- Finished training")
 
     predictions = []
@@ -208,7 +224,10 @@ def trainclf():
     return clfs, res['x']
 
 def log_loss_func(weights, predictions, y_valid):
-    ''' scipy minimize will pass the weights as a numpy array '''
+    '''
+    Function to optimize the weights based on log_loss. Which is not ideal because we want to optimize accuracy.
+    It does however provide some functionality, and the accuracy function still has some issues.
+    '''
     final_prediction = 0
     for weight, prediction in zip(weights, predictions):
             final_prediction += weight*prediction
@@ -216,29 +235,15 @@ def log_loss_func(weights, predictions, y_valid):
     return log_loss(y_valid, final_prediction)
 
 def accuracy_func(weights, predictions, y_valid):
-    ''' scipy minimize will pass the weights as a numpy array '''
+    '''
+    Function to optimize the weights based on accuracy.
+    '''
     final_prediction = 0
     for weight, prediction in zip(weights, predictions):
         final_prediction += weight*prediction
-
-    return accuracy_score(y_valid, final_prediction)
-
-def make_submission(clfs, weights):
-    '''
-    Code to make a submission:
-    Gets a classifier and uses this to classify the test-set which is loaded using load_data
-    '''
-    path = ('..\submissions\my_submission_{date}.csv'.format(date=time.strftime("%y%m%d%H%M")))
-
-    X_test, ids = load_data(testdata=True)
-    y_prob_tot = 0
-    
-    for i in range(len(clfs)):
-        y_prob = clfs[i].predict_proba(X_test)
-        y_prob_tot += y_prob*weights[i]
-    y_prob_tot=np.array(y_prob_tot)
-    max_index=np.argmax(y_prob_tot, axis=1)
+    max_index=np.argmax(final_prediction, axis=1)
     y_pred = []
+    #in this loop we translate the predictions to the actual terms:
     for i in range(len(max_index)):
         if max_index[i] == 0:
             y_pred.append('functional')
@@ -249,6 +254,41 @@ def make_submission(clfs, weights):
         else:
             y_pred.append('error')
 
+    return accuracy_score(y_valid, y_pred)
+
+def make_submission(clfs, weights):
+    '''
+    Code to make a submission:
+    Gets a list of classifiers and uses these to classify the test-set which is loaded using load_data
+    also gets a list of weights to use the probabilities proposed by the classifiers with those weights.
+    '''
+    #path to store the submission to:
+    #path = ('..\submissions\my_submission_{date}.csv'.format(date=time.strftime("%y%m%d%H%M"))) # alternative path
+    path = ('githubsubmission.csv') # quick hack for some git issues on remote Unix system.
+    X_test, ids = load_data(testdata=True) # load the data
+    y_prob_tot = 0
+
+    #We weight the probabilities provided by the different classifiers:
+    for i in range(len(clfs)): # for all classifiers
+        y_prob = clfs[i].predict_proba(X_test) # predict for the test set
+        y_prob_tot += y_prob*weights[i] # and weigh
+    y_prob_tot=np.array(y_prob_tot) # make the prob matrix an numpy matrix
+    #pick the prediction (out of funct, non funct, need repair) with the highest probability:
+    # note that the probabilities don't add up to one but to the number of classifiers,
+    # this is however not a problem as we are only interested in the maximum value.
+    max_index=np.argmax(y_prob_tot, axis=1)
+    y_pred = []
+    #in this loop we translate the predictions to the actual terms:
+    for i in range(len(max_index)):
+        if max_index[i] == 0:
+            y_pred.append('functional')
+        elif max_index[i] == 1:
+            y_pred.append('functional needs repair')
+        elif max_index[i] == 2:
+            y_pred.append('non functional')
+        else:
+            y_pred.append('error')
+    #Open a file and write the data (with some formatting) to the location in path
     with open(path, 'w') as f:
         f.write('id,status_group\n')
         for id, pred in zip(ids, y_pred):
@@ -272,15 +312,27 @@ def pseudolabel():
     pl.addExamples(y_pred, ids)
 
 def main():
+    '''
+    The main function of the program:
+    Here we first call the training, and on some occasions we also call the submission maker.
+    Weights have to be set manually as it is most likely that these were derived from a 0.8 split train validation run.
+    When we run with all the training data (we actually use a 0.999 split but that is not a significant difference)
+    the weights can't be derived from that run (guaranteed overfitting), the weights from the 0.8 split however
+    are perfectly suitable.
+    '''
     print(" - Start.")
-    model, weights = trainclf()
+    model, weights = trainclf() #training
     #weights have to be saved from an 0.8 split to prevent heavy overfitting when run on full data
-    weights= [0.30, 0.05, 0.55, 0.10] # RF, GBM, GBM2, RF2
-    #make_submission(model, weights)
+    weights= [0.21901258,  0.1913049,   0.30512143,  0.28456109] # RF, GBM, GBM2, RF2
+    make_submission(model, weights) #testing
     print(" - Finished.")
 
 if __name__ == '__main__':
+    '''
+    The main function here everything starts.
+    Actually we only start (and close and print) a timer for the run time of the total program.
+    Besides calling yet another (more real) main function.
+    '''
     start_time = time.time()
     main()
-    #statist()
     print("--- execution took %s seconds ---" % (time.time() - start_time))

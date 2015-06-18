@@ -36,8 +36,8 @@ def order_factorize_and_save():
     for var in VARS_TO_ORDER:
         print "\nfinding best ordering of variable \"", var, "\""
         new_order = co.find_best_ordering(data, var)
-        data[var].cat.categories = new_order
-        data_test_set[var].cat.categories = new_order
+        data[var].cat.reorder_categories = new_order
+        data_test_set[var].cat.reorder_categories = new_order
     
     data = ld.factorize_data(data)
     data_test_set = ld.factorize_data_testset(data_test_set)        

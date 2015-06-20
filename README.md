@@ -7,8 +7,3 @@ Erik Eppenhof
 Thomas van Heyningen 
 Senna van Iersel
 Harmen Prins
-Bas van Berkel
-Hans-Christiaan Braun
-Erik Eppenhof
-Thomas van Heyningen
-Senna van Iersel

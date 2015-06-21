@@ -1,3 +1,9 @@
+'''
+File to generate and preprocess some features of the data from the Waterdragers group for the Pump it up challenge.
+Members: Bas van Berkel, Hans-Christiaan Braun, Erik Eppenhof, Thomas van Heyningen, Senna van Iersel, and  Harmen Prins
+Most functions are commented in the main function because they only have to be run once or twice on the data.
+'''
+
 import os
 import time
 import re
@@ -8,27 +14,37 @@ import datetime as dt
 from sklearn.preprocessing import LabelEncoder
 from sklearn.neighbors import KNeighborsClassifier, NearestNeighbors
 
-def closepumps(data_dir,traindata,testdata, trainlabels, k=5):
+def closepumps(traindata,testdata, trainlabels, k=5):
     '''
-    This one does NOT WORK!!!
+    Function to report the classmembership of the k closests pumps in the training set for both the train and test data.
+    Sadly this function makes the algorithm overfit on the training data, getting a cv score of .83-.84 but a
+    leaderboard score of .80-.81
+
     '''
-    names_parameters=['longitude', 'latitude']
+    #Get the sizes of the data:
     (testrows, testcolumns)=testdata.shape
     (trainrows, traincolumns)=traindata.shape
+    #Take the train and testdata (fill empty fields with -1)
     traindata= traindata.fillna(-1)
     testdata = testdata.fillna(-1)
+    #Take the relevant columns from the data
     train = np.column_stack((traindata['longitude'], traindata['latitude']))
     test = np.column_stack((testdata['longitude'], testdata['latitude']))
 
+    #find the nearest Neigbors
     nbrs = NearestNeighbors(n_neighbors=k+1, algorithm='ball_tree').fit(train)
+    #Get the distances and indices of the k+1 nearest neighbors
     distances, indices = nbrs.kneighbors(train)
+    #Initialize necessary arrays
     trainfunctionalarray = []
     trainrepairarray =[]
     trainbrokenarray =[]
+    #Walk throught the complete train set
     for i in xrange(0, len(indices)):
         functional = 0
         repair=0
         broken=0
+        #for each pump in the neigbors of the current pump get the label, we exclude the first as that is the pump itself.
         for pump in indices[i][1:]:
             pumplabel = trainlabels.loc[pump]['status_group']
             if(pumplabel=='functional needs repair'):
@@ -37,20 +53,24 @@ def closepumps(data_dir,traindata,testdata, trainlabels, k=5):
                 functional+=1
             else:
                 broken+=1
-
+        #add the data to the array for each pump
         trainfunctionalarray.append(functional)
         trainrepairarray.append(repair)
         trainbrokenarray.append(broken)
 
+    #get the nn of the testset and the indexes
     testdistances, testindices = nbrs.kneighbors(test)
     testfunctionalarray = []
     testrepairarray =[]
     testbrokenarray =[]
 
+    #Walk throught the complete test set
     for i in xrange(0, len(testindices)):
         functional = 0
         repair=0
         broken=0
+        #for each pump in the neigbors of the current pump get the label, don't take the last because we use k+1
+        # to get one extra for the training set.
         for pump in testindices[i][:-1]:
             pumplabel = trainlabels.loc[pump]['status_group']
             if(pumplabel=='functional needs repair'):
@@ -63,6 +83,7 @@ def closepumps(data_dir,traindata,testdata, trainlabels, k=5):
         testfunctionalarray.append(functional)
         testrepairarray.append(repair)
         testbrokenarray.append(broken)
+    #Store all of the new data arrays to the extrafeatures file.
     newtestdata=np.zeros((testrows,1), dtype=int)
     newtestdata[:, 0]=np.array(testfunctionalarray)
     store_data(newtestdata, train=False,labels=(str(k) + '_nearest_functional'), one=True)
@@ -81,9 +102,6 @@ def closepumps(data_dir,traindata,testdata, trainlabels, k=5):
     newtraindata=np.zeros((trainrows,1), dtype=int)
     newtraindata[:, 0]=np.array(trainbrokenarray)
     store_data(newtraindata, train=True,labels=(str(k) + '_nearest_broken'), one=True)
-    #encode_categorical(data_dir,traindata,testdata, ['funder_clean', 'installer_clean'])
-    #frequency_feature(data_dir,traindata,testdata, ['funder_clean', 'installer_clean'])
-
 
 def clean_text(data_dir,traindata,testdata):
     '''
@@ -131,37 +149,54 @@ def clean_text(data_dir,traindata,testdata):
 
 
 def frequency_feature(data_dir,traindata,testdata, parameters=None):
+    '''
+    For some categorical features frequency representations of their parameters could be informative.
+    We again use the store_data function to store the data to the relevant file
+    '''
+    #The parameters we want to get frequency values for (unless the parameters are specified in the call.
     if parameters == None:
         names_parameters=['funder', 'installer','basin','region','lga','ward','scheme_name']
     else:
         names_parameters=parameters
+
+    #Get the size of the data and load in the data, filling empty fields with -1
     (testrows, testcolumns)=testdata.shape
     (trainrows, traincolumns)=traindata.shape
     traindata=traindata.fillna(-1)
     testdata = testdata.fillna(-1)
+
+    #For all of the colomns/features we want to get the frequency from:
     for feature in names_parameters:
+        #Count the data and get the unique values and their counts:
         countdata=pd.concat([traindata[feature],testdata[feature]], axis=0)
         unique, counts = np.unique(countdata, return_counts=True)
-        #print len(unique)
-        #for i in range(0,len(unique)):
-        #    print str(unique[i]) + ' <- name  -- count -> ' + str(counts[i])
+        '''
+        #Some code to get insight into the data
+        print len(unique)
+        for i in range(0,len(unique)):
+            print str(unique[i]) + ' <- name  -- count -> ' + str(counts[i])
+        '''
+        #Initialize some arrays
         train_frq = []
         test_frq = []
+        #Loop for all the train data:
         for freq in traindata[feature]:
-            if freq is -1:
+            if freq is -1: # if the data is missing put -1
                 train_frq.append(-1)
-            elif freq is '0':
+            elif freq is '0': # if the data is missing put -1
                 train_frq.append(-1)
-            else:
+            else: #otherwise put the frequency of that field using the unique/counts mapping.
                 train_frq.append(counts[np.where(unique==freq)[0][0]])
+        #Loop for the test data:
         for freq in testdata[feature]:
-            if freq is -1:
+            if freq is -1: # if the data is missing put -1
                 test_frq.append(-1)
-            elif freq is '0':
+            elif freq is '0': # if the data is missing put -1
                 test_frq.append(-1)
-            else:
+            else: #otherwise put the frequency of that field using the unique/counts mapping.
                 test_frq.append(counts[np.where(unique==freq)[0][0]])
 
+        #Create a new array to put the data in and store it in the file using the store_data function
         newtestdata=np.zeros((testrows,1), dtype=int)
         newtestdata[:, 0]=np.array(test_frq)
         store_data(newtestdata, train=False,labels=(feature +'_freq'), one=True)
@@ -171,6 +206,11 @@ def frequency_feature(data_dir,traindata,testdata, parameters=None):
 
 
 def encode_categorical(data_dir,traindata,testdata, parameters):
+    '''
+    Function to encode the categorical features as numerical features using a LabelEncoder.
+    Important is to encode the test and train file in the same manner
+    '''
+    #Unless pre-picked parameters to work on are given we work on these parameters.
     if parameters == None:
         names_parameters=['funder','installer','wpt_name','basin','subvillage','region','lga','ward','public_meeting','recorded_by'
         ,'scheme_management','scheme_name','permit','extraction_type','extraction_type_group','extraction_type_class','management','management_group','payment',
@@ -178,14 +218,22 @@ def encode_categorical(data_dir,traindata,testdata, parameters):
                        'waterpoint_type','waterpoint_type_group']
     else:
         names_parameters=parameters
+    #Get the shape of the data
     (testrows, testcolumns)=testdata.shape
     (trainrows, traincolumns)=traindata.shape
+
+    #For all of the specified features:
     for feature in names_parameters:
+        #We initialize an encoder.
         le = LabelEncoder()
+        #We add the test and train data together
         fitdata=np.append(traindata[feature].values,testdata[feature].values)
+        #Because the mapping to numbers has to be the same in both, thus we fit them together.
         le.fit(fitdata)
+        #We however want to work with the train and test data separate so we transform them separately
         train_cat=le.transform(traindata[feature])
         test_cat = le.transform(testdata[feature])
+        #We initialize empty arrays for the train and test data and store these to the relevant files.
         newtestdata=np.zeros((testrows,1), dtype=int)
         newtestdata[:, 0]=np.array(test_cat)
         store_data(newtestdata, train=False,labels=(feature +'_num'), one=True)
@@ -194,22 +242,34 @@ def encode_categorical(data_dir,traindata,testdata, parameters):
         store_data(newtraindata, train=True,labels=(feature +'_num'), one=True)
 
 def date_features(data):
+    '''
+    Function to create features using the two data features
+    '''
+    #Get the shape:
     (rows, columns)=data.shape
+    #We are generate the following 5 features:
     years = []
     months =[]
     days = []
     age = []
     distance = []
+    #We walk to the data and construction array at the same time using a zip:
     for date, construction in zip(data['date_recorded'], data['construction_year']):
+        #Using regex we match the textual date in date to 3 numbers
         match=re.match('([0-9]{4})\-([0-9]{2})\-([0-9]{2})',date)
+        #These numbers represent year, month and day. We store them in the relevant array.
         years.append(match.group(1))
         months.append(match.group(2))
         days.append(match.group(3))
+        #Data of recording is also derived, we reformulate the data to calculate the distance
         recorddate=dt.date(int(match.group(1)), int(match.group(2)), int(match.group(3)))
+        #We calculate the distance between the construction and the date of recording in years
         age.append(recorddate.year-construction)
+        #We also calculate the date between recording and 1 January 2014 (everything was recorded before that data)
         begin2014 = dt.date(2014, 01, 01)
         dist = abs(begin2014 - recorddate)
         distance.append(dist.days)
+    #We return the data as one matrix (which is stored via the main function, different from the other functions above)
     newdata=np.zeros((rows,5), dtype=int)
     newdata[:, 0]=np.array(years)
     newdata[:, 1]=np.array(months)
@@ -219,26 +279,31 @@ def date_features(data):
     return(newdata)
 
 def store_data(newdata, ids=None, data_dir=None, train=True, labels=(''), one=False):
-
+    '''
+    Function to store the data generated with the other features into separate files called extratrainfeatures.csv
+    and extratestfeatures.csv because we don't like to change the original data.
+    '''
     if train:
         try:
-            # Unix
+            # first try to save it as a Unix path
             data_dir=os.path.dirname(os.path.abspath('')) + '/data/'
             trainfile = pd.read_csv(data_dir + 'extratrainfeatures.csv')
         except IOError:
-            # Windows
+            # then try a Windows path
             data_dir='..\\data\\'
             trainfile = pd.read_csv(data_dir + 'extratrainfeatures.csv')
         #trainfile=pd.DataFrame(data=ids)  # only needed to generate the file the first time
-        trainfile.set_index('id')
+        trainfile.set_index('id') # set the index
         index=0
-        if one:
+        if one: # if theres only one new label
             trainfile[labels]=newdata[:,0]
-        else:
+        else: # if there are multiple labels we are saving.
             for label in labels:
                 trainfile[label]=newdata[:,index]
                 index=index+1
+        #The actual saving
         trainfile.to_csv(data_dir + 'extratrainfeatures.csv', index_label='id', index=False)
+    #All of the above, but now for the test features
     else:
         try:
             # Unix
@@ -262,7 +327,7 @@ def store_data(newdata, ids=None, data_dir=None, train=True, labels=(''), one=Fa
 def main():
     print(" - Start.")
     try:
-        # Unix
+        # load the data as a Unix path
         data_dir=os.path.dirname(os.path.abspath('')) + '/data/'
 
         train = pd.read_csv(data_dir + 'trainset.csv')
@@ -271,7 +336,7 @@ def main():
         newtrain = pd.read_csv(data_dir + 'nieuwtrain.csv')
         newtest = pd.read_csv(data_dir + 'nieuwtest.csv')
     except IOError:
-        # Windows
+        # If Unix fails we try a Windows path
         data_dir='..\\data\\'
         train = pd.read_csv(data_dir + 'trainset.csv')
         trainlabels = pd.read_csv(data_dir + 'trainlabels.csv')
@@ -279,15 +344,16 @@ def main():
         newtrain = pd.read_csv(data_dir + 'nieuwtrain.csv')
         newtest = pd.read_csv(data_dir + 'nieuwtest.csv')
 
+    ##All of the calls are commented because running them twice is most of the times not necessary.
+
     #Clean up textual data to prevent duplicates with different names by removing spaces and uppercase
-    clean_text(data_dir,newtrain,newtest)
+    #clean_text(data_dir,newtrain,newtest)
 
     #to make the categorical features numeric:
     #encode_categorical(data_dir,train,test)
 
     #feature on distance to other pumps:
-    #closepumps(data_dir,train,test, trainlabels, k=5) # ran it with k=5,10,20 and 40
-
+    #closepumps(train,test, trainlabels, k=5) # ran it with k=5,10,20 and 40
 
     #to create the datelabels
     #newtrain = date_features(train)

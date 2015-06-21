@@ -5,8 +5,7 @@ Created on Wed May 06 14:10:37 2015
 @author: Hans-Christiaan
 """
 
-import load_data as ld
-import mrmr
+from mrmr import load_data as ld
 
 
 def run():

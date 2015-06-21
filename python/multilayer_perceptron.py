@@ -28,7 +28,7 @@ def _pack(layers_coef_, layers_intercept_):
 
 
 class BaseMultilayerPerceptron(six.with_metaclass(ABCMeta, BaseEstimator)):
-    """Base class for MLP classification and regression.
+    """Base class for MLP python and regression.
 
     Warning: This class should not be used directly.
     Use derived classes instead.

@@ -171,7 +171,7 @@ def squared_loss(y_true, y_pred):
 
 
 def log_loss(y_true, y_prob):
-    """Compute Logistic loss for classification.
+    """Compute Logistic loss for python.
 
     Parameters
     ----------

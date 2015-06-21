@@ -248,7 +248,7 @@ def trainclf():
 
     #print clf.feature_importances_ # to print the importance of all features.
 
-    #Print a classification report,seeing which classes have worse performance:
+    #Print a python report,seeing which classes have worse performance:
     #y_pred = clf.predict(X_valid)
     #print classification_report(y_valid, y_pred)
 

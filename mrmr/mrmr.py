@@ -7,7 +7,8 @@ Minimum-redundancy-maximum-relevance feature selection.
 @author: Hans-Christiaan
 """
 
-import load_data as ld
+from mrmr import load_data as ld
+
 
 def mRMR(data, n, class_vector_name = 'status_group'):
     """ Minimum-redundancy-maximum-relevance

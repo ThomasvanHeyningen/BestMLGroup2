@@ -13,6 +13,7 @@ import numpy as np
 from collections import Counter
 from operator import add
 
+
 # For easily loading the data in the iPython console.
 TRAIN_X_PATH = "../../train/train_x.csv"
 TRAIN_Y_PATH = "../../train/train_y.csv"

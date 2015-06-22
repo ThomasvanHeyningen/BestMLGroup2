@@ -37,7 +37,15 @@ def group_categories(data, column_name, y_name="status_group"):
                 data[column_name].replace(to_replace = cat, value = new_cat, inplace=True)
                
     data[column_name] = data[column_name].astype('category')
-    data[column_name] = data[column_name].cat.rename_categories([str(group) for group in best_grouping])
+    
+    new_names = []
+    for old_name in data[column_name].cat.categories:
+        for group in best_grouping:
+            if old_name in group:
+                new_name = str(group)
+                new_names = new_names + [new_name]    
+    
+    data[column_name] = data[column_name].cat.rename_categories(new_names)
            
     return data        
     
